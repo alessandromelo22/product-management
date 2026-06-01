@@ -49,13 +49,13 @@ public class CustomerService {
 //POST
     public CustomerResponseDto create(CustomerRequestDto requestDto){
 
-        boolean cpfExists = this.customerRepository.existsByCpf(requestDto.getCpf());
         boolean phoneNumberExists = this.customerRepository.existsByPhoneNumber(requestDto.getPhoneNumber());
+        boolean cpfExists = this.customerRepository.existsByCpf(requestDto.getCpf());
 
-        if(cpfExists){
-            throw new CpfAlreadyExistsException(requestDto.getCpf());
-        } if (phoneNumberExists){
+        if(phoneNumberExists){
             throw new PhoneNumberAlreadyExistsException(requestDto.getPhoneNumber());
+        } if (cpfExists){
+            throw new CpfAlreadyExistsException(requestDto.getCpf());
         }
 
         Customer customer = this.customerMapper.toEntity(requestDto);
@@ -69,23 +69,22 @@ public class CustomerService {
         return this.customerRepository.findById(customerId)
                 .map(customer -> {
 
-                    boolean cpfExists = this.customerRepository.existsByCpf(requestDto.getCpf());
                     boolean phoneNumberExists = this.customerRepository.existsByPhoneNumber(requestDto.getPhoneNumber());
+                    boolean cpfExists = this.customerRepository.existsByCpf(requestDto.getCpf());
 
-                    if(cpfExists){
-                        throw new CpfAlreadyExistsException(requestDto.getCpf());
-                    } else if (phoneNumberExists) {
+                    if(phoneNumberExists){
                         throw new PhoneNumberAlreadyExistsException(requestDto.getPhoneNumber());
+                    } else if (cpfExists) {
+                        throw new CpfAlreadyExistsException(requestDto.getCpf());
                     }
 
                     customer.setName(requestDto.getName());
-                    customer.setCpf(requestDto.getCpf());
                     customer.setPhoneNumber(requestDto.getPhoneNumber());
+                    customer.setCpf(requestDto.getCpf());
 
                     return this.customerMapper.toResponseDto(this.customerRepository.save(customer));
 
                 }).orElseThrow(() -> new CustomerNotFoundException(customerId));
-
     }
 
 //DELETE
