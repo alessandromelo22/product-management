@@ -1,9 +1,13 @@
 package com.alessandromelo.dto.customer;
 
-public class CustomerRequestDto {
+import jakarta.validation.constraints.NotBlank;
 
+public class CustomerRequestDto {
+    @NotBlank
     private String name;
+    @NotBlank
     private String phoneNumber;
+    @NotBlank
     private String cpf;
 
     public CustomerRequestDto(String name, String phoneNumber, String cpf) {
