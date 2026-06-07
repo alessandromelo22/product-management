@@ -6,7 +6,7 @@ public class CustomerRequestDtoBuilder {
 
     private String name = "João da Silva";
     private String phoneNumber = "37123456789";
-    private String cpf = "11111111111";
+    private String cpf = "067.854.802-44";
 
     public CustomerRequestDtoBuilder withName(String name){
         this.name = name;

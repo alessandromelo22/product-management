@@ -1,12 +1,9 @@
 package com.alessandromelo.repository;
 
-import com.alessandromelo.builders.customer.CustomerBuilder;
 import com.alessandromelo.entity.Customer;
-import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -33,7 +30,7 @@ class CustomerRepositoryTest {
         Customer customer = new Customer();
         customer.setName("Maria");
         customer.setPhoneNumber("123456789");
-        customer.setCpf("11111111111");
+        customer.setCpf("067.854.802-44");
         this.testEntityManager.persistAndFlush(customer);
 
         //Act
@@ -50,7 +47,7 @@ class CustomerRepositoryTest {
         Customer customer = new Customer();
         customer.setName("Maria");
         customer.setPhoneNumber("123456789");
-        customer.setCpf("11111111111");
+        customer.setCpf("067.854.802-44");
         this.testEntityManager.persistAndFlush(customer);
 
         //Act
@@ -68,11 +65,11 @@ class CustomerRepositoryTest {
         Customer customer = new Customer();
         customer.setName("Maria");
         customer.setPhoneNumber("123456789");
-        customer.setCpf("11111111111");
+        customer.setCpf("067.854.802-44");
         this.testEntityManager.persistAndFlush(customer);
 
         //Act
-        boolean returned = this.customerRepository.existsByCpf("11111111111");
+        boolean returned = this.customerRepository.existsByCpf("067.854.802-44");
 
         //Assert
         Assertions.assertTrue(returned);
@@ -85,7 +82,7 @@ class CustomerRepositoryTest {
         Customer customer = new Customer();
         customer.setName("Maria");
         customer.setPhoneNumber("123456789");
-        customer.setCpf("11111111111");
+        customer.setCpf("067.854.802-44");
         this.testEntityManager.persistAndFlush(customer);
 
         //Act
