@@ -10,9 +10,9 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String phoneNumber;
-    @Column(unique = true)
+    @Column(unique = true,  nullable = false)
     private String cpf;
 
     @OneToMany(mappedBy = "customer")

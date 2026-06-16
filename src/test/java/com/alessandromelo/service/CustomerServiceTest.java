@@ -201,7 +201,7 @@ class CustomerServiceTest {
         Assertions.assertAll(
                 () -> Assertions.assertEquals("João da Silva", captured.getName()),
                 () -> Assertions.assertEquals("37123456789", captured.getPhoneNumber()),
-                () -> Assertions.assertEquals("11111111111", captured.getCpf())
+                () -> Assertions.assertEquals("067.854.802-44", captured.getCpf())
         );
 
         Assertions.assertAll(
@@ -228,7 +228,7 @@ class CustomerServiceTest {
         CustomerRequestDto requestDto = new CustomerRequestDtoBuilder()
                 .withName("Maria")
                 .withPhoneNumber("085769945")
-                .withCpf("99999999999")
+                .withCpf("976.566.435-67")
                 .build();
 
         when(this.customerRepository.findById(999L)).thenReturn(Optional.empty());
@@ -248,7 +248,7 @@ class CustomerServiceTest {
         CustomerRequestDto requestDto = new CustomerRequestDtoBuilder()
                 .withName("Maria")
                 .withPhoneNumber("085769945")
-                .withCpf("99999999999")
+                .withCpf("976.566.435-67")
                 .build();
 
         Customer customer = new CustomerBuilder().build();
@@ -271,7 +271,7 @@ class CustomerServiceTest {
         CustomerRequestDto requestDto = new CustomerRequestDtoBuilder()
                 .withName("Maria")
                 .withPhoneNumber("085769945")
-                .withCpf("99999999999")
+                .withCpf("976.566.435-67")
                 .build();
 
         Customer customer = new CustomerBuilder().build();
@@ -295,7 +295,7 @@ class CustomerServiceTest {
         CustomerRequestDto requestDto = new CustomerRequestDtoBuilder()
                 .withName("Maria")
                 .withPhoneNumber("085769945")
-                .withCpf("99999999999")
+                .withCpf("976.566.435-67")
                 .build();
 
         Customer customer = new CustomerBuilder().build();
@@ -324,7 +324,7 @@ class CustomerServiceTest {
                 () -> Assertions.assertEquals(1L, captured.getId()),
                 () -> Assertions.assertEquals("Maria", captured.getName()),
                 () -> Assertions.assertEquals("085769945", captured.getPhoneNumber()),
-                () -> Assertions.assertEquals("99999999999", captured.getCpf())
+                () -> Assertions.assertEquals("976.566.435-67", captured.getCpf())
         );
 
         Assertions.assertAll(

@@ -8,6 +8,7 @@ public class CustomerRequestDto {
     @NotBlank
     private String phoneNumber;
     @NotBlank
+    //Colocar a annotation @CPF e alterar os testes
     private String cpf;
 
     public CustomerRequestDto(String name, String phoneNumber, String cpf) {

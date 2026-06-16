@@ -7,7 +7,7 @@ public class CustomerBuilder {
     private Long id = 1L;
     private String name = "João da Silva";
     private String phoneNumber = "37123456789";
-    private String cpf = "11111111111";
+    private String cpf = "067.854.802-44";
 
 
     public CustomerBuilder withId(Long id){
