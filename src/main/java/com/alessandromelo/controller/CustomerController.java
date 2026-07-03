@@ -43,9 +43,10 @@ public class CustomerController {
         summary = "Search for a Customer by ID",
         description = "Returns a registered Customer by ID.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Customer successfully returned."),
-        @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
-        @ApiResponse(responseCode = "404", description = "Customer not found.")
+            @ApiResponse(responseCode = "200", description = "Customer successfully returned."),
+            @ApiResponse(responseCode = "404", description = "Customer not found."),
+            @ApiResponse(responseCode = "409", description = "Invalid ID provided.")
+
     })
     @GetMapping("/{customerId}")
     public ResponseEntity<CustomerResponseDto> getById(@PathVariable Long customerId){
@@ -54,12 +55,13 @@ public class CustomerController {
 
 //POST:
     @Operation(
-        summary = "Register a new Client",
-        description = "Register a new customer in the database.")
+            summary = "Register a new Client",
+            description = "Register a new customer in the database.")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Customer successfully registered."),
-        @ApiResponse(responseCode = "400", description = "Invalid input data."),
+            @ApiResponse(responseCode = "201", description = "Customer successfully registered."),
+            @ApiResponse(responseCode = "409", description = "Invalid input data.")
     })
+    @PostMapping
     public ResponseEntity<CustomerResponseDto> create(@RequestBody @Valid CustomerRequestDto requestDto){
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(this.customerService.create(requestDto));
@@ -67,13 +69,14 @@ public class CustomerController {
 
 //PUT
     @Operation(
-        summary = "Update a customer by ID",
-        description = "Update the data of an existing customer.")
+            summary = "Update a customer by ID",
+            description = "Update the data of an existing customer.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Customer updated successfully."),
-        @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
-        @ApiResponse(responseCode = "400", description = "Invalid input data."),
-        @ApiResponse(responseCode = "404", description = "Customer not found."),
+            @ApiResponse(responseCode = "200", description = "Customer updated successfully."),
+            @ApiResponse(responseCode = "404", description = "Customer not found."),
+            @ApiResponse(responseCode = "409", description = "Invalid ID provided."),
+            @ApiResponse(responseCode = "409", description = "Invalid input data.")
+
     })
     @PutMapping("/{customerId}")
     public ResponseEntity<CustomerResponseDto> update(@PathVariable Long customerId, @RequestBody @Valid CustomerRequestDto requestDto){
@@ -82,16 +85,17 @@ public class CustomerController {
 
 //DELETE
     @Operation(
-        summary = "Delete a customer by ID.",
-        description = "Delete a customer record from the database by ID.")
+            summary = "Delete a customer by ID.",
+            description = "Deletes a customer from the database by ID.")
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Client successfully deleted."),
-        @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
-        @ApiResponse(responseCode = "404", description = "Customer not found."),
-        @ApiResponse(responseCode = "409", description = "Deletion not performed - Client is linked to another entity."),
+            @ApiResponse(responseCode = "204", description = "Client successfully deleted."),
+            @ApiResponse(responseCode = "404", description = "Customer not found."),
+            @ApiResponse(responseCode = "409", description = "Invalid ID provided."),
+            @ApiResponse(responseCode = "409", description = "Deletion not performed - Client is linked to another entity.")
     })
     @DeleteMapping("/{customerId}")
     public ResponseEntity<Void> deleteById(@PathVariable Long customerId){
+        this.customerService.deleteById(customerId);
         return ResponseEntity.noContent().build(); //204 409
     }
 

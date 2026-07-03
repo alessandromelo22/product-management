@@ -10,4 +10,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>{
 
     boolean existsByCpf(String cpf);
     boolean existsByPhoneNumber(String phoneNumber);
+
+    boolean existsByCpfAndIdNot(String cpf, Long id);
+    boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
+    //Trocar dentro do Service PUT e dos testes tambem;
 }

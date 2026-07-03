@@ -254,7 +254,7 @@ class CustomerServiceTest {
         Customer customer = new CustomerBuilder().build();
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(this.customerRepository.existsByPhoneNumber(requestDto.getPhoneNumber())).thenReturn(true);
+        when(this.customerRepository.existsByPhoneNumberAndIdNot(requestDto.getPhoneNumber(), 1L)).thenReturn(true);
 
         //Act:
         //Assert:
@@ -277,8 +277,8 @@ class CustomerServiceTest {
         Customer customer = new CustomerBuilder().build();
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(this.customerRepository.existsByPhoneNumber(requestDto.getPhoneNumber())).thenReturn(false);
-        when(this.customerRepository.existsByCpf(requestDto.getCpf())).thenReturn(true);
+        when(this.customerRepository.existsByPhoneNumberAndIdNot(requestDto.getPhoneNumber(), 1L)).thenReturn(false);
+        when(this.customerRepository.existsByCpfAndIdNot(requestDto.getCpf(), 1L)).thenReturn(true);
 
         //Act:
         //Assert:
@@ -307,8 +307,8 @@ class CustomerServiceTest {
                 .build();
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(this.customerRepository.existsByPhoneNumber(requestDto.getPhoneNumber())).thenReturn(false);
-        when(this.customerRepository.existsByCpf(requestDto.getCpf())).thenReturn(false);
+        when(this.customerRepository.existsByPhoneNumberAndIdNot(requestDto.getPhoneNumber(), 1L)).thenReturn(false);
+        when(this.customerRepository.existsByCpfAndIdNot(requestDto.getCpf(), 1L)).thenReturn(false);
         when(this.customerRepository.save(customer)).thenReturn(customer);
         when(this.customerMapper.toResponseDto(customer)).thenReturn(responseDTO);
 
@@ -365,7 +365,7 @@ class CustomerServiceTest {
         Customer customer = new CustomerBuilder().build();
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(this.saleRepository.existByCustomerId(1L)).thenReturn(true);
+        when(this.saleRepository.existsByCustomerId(1L)).thenReturn(true);
 
         //Act:
         //Assert:
@@ -382,7 +382,7 @@ class CustomerServiceTest {
         Customer customer = new CustomerBuilder().build();
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(this.saleRepository.existByCustomerId(1L)).thenReturn(false);
+        when(this.saleRepository.existsByCustomerId(1L)).thenReturn(false);
 
         //Act:
         this.customerService.deleteById(1L);
