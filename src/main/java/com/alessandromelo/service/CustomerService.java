@@ -69,8 +69,8 @@ public class CustomerService {
         return this.customerRepository.findById(customerId)
                 .map(customer -> {
 
-                    boolean phoneNumberExists = this.customerRepository.existsByPhoneNumber(requestDto.getPhoneNumber());
-                    boolean cpfExists = this.customerRepository.existsByCpf(requestDto.getCpf());
+                    boolean phoneNumberExists = this.customerRepository.existsByPhoneNumberAndIdNot(requestDto.getPhoneNumber(), customerId);
+                    boolean cpfExists = this.customerRepository.existsByCpfAndIdNot(requestDto.getCpf(), customerId);
 
                     if(phoneNumberExists){
                         throw new PhoneNumberAlreadyExistsException(requestDto.getPhoneNumber());
@@ -93,7 +93,7 @@ public class CustomerService {
         Customer customer = this.customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
 
-        boolean hasSales = this.saleRepository.existByCustomerId(customerId);
+        boolean hasSales = this.saleRepository.existsByCustomerId(customerId);
 
         if(hasSales){
             throw new EntityInUseException(Customer.class, customerId);
