@@ -77,11 +77,11 @@ public class Sale {
         this.installmentAmount = installmentAmount;
     }
 
-    public LocalDateTime getPurchaseDate() {
+    public LocalDateTime getSaleDate() {
         return saleDate;
     }
 
-    public void setPurchaseDate(LocalDateTime saleDate) {
+    public void setSaleDate(LocalDateTime saleDate) {
         this.saleDate = saleDate;
     }
 
@@ -93,11 +93,11 @@ public class Sale {
         this.customer = customer;
     }
 
-    public List<SaleProduct> getPurchaseProducts() {
+    public List<SaleProduct> getSaleProducts() {
         return saleProducts;
     }
 
-    public void setPurchaseProducts(List<SaleProduct> saleProducts) {
+    public void setSaleProducts(List<SaleProduct> saleProducts) {
         this.saleProducts = saleProducts;
     }
 }

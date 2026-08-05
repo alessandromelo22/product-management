@@ -61,11 +61,11 @@ public class Customer {
         this.cpf = cpf;
     }
 
-    public List<Sale> getPurchases() {
+    public List<Sale> getSales() {
         return sales;
     }
 
-    public void setPurchases(List<Sale> sales) {
+    public void setSales(List<Sale> sales) {
         this.sales = sales;
     }
 }

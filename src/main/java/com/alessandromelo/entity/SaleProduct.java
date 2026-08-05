@@ -52,11 +52,11 @@ public class SaleProduct {
         this.unitPrice = unitPrice;
     }
 
-    public Sale getPurchase() {
+    public Sale getSale() {
         return sale;
     }
 
-    public void setPurchase(Sale sale) {
+    public void setSale(Sale sale) {
         this.sale = sale;
     }
 

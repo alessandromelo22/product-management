@@ -40,7 +40,7 @@ public class CustomerController {
 
 //GET:
     @Operation(
-        summary = "Search for a Customer by ID",
+        summary = "Search for a customer by ID",
         description = "Returns a registered Customer by ID.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Customer successfully returned."),
@@ -55,7 +55,7 @@ public class CustomerController {
 
 //POST:
     @Operation(
-            summary = "Register a new Client",
+            summary = "Register a new customer",
             description = "Register a new customer in the database.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Customer successfully registered."),
