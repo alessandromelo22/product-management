@@ -1,6 +1,7 @@
 package com.alessandromelo.security.service;
 
 import com.alessandromelo.dto.security.LoginRequestDto;
+import com.alessandromelo.dto.security.RefreshRequestDto;
 import com.alessandromelo.exception.security.JwtTokenWithInvalidFormatException;
 import com.alessandromelo.security.filter.JwtAuthenticationFilter;
 import com.auth0.jwt.JWT;
@@ -30,11 +31,17 @@ public class JwtService {
     private Algorithm algorithm;
 
     /**
-     * Validade do Token
+     * Validade do accessToken e refreshToken
      */
-    //@Value("${EXPIRATION_TIME:900000}")
-    private Long expirationMs = 900_000L;
+    //ver de colocar esses valores em variaveis de ambiente
+    private static final long ACCESS_TOKEN_EXPIRATION = 900_000; //15 minutos
+    private static final long REFRESH_TOKEN_EXPIRATION = 604_800_000; // 7 dias
 
+    /**
+     * Definem os tipos de tokens
+     */
+    private static final String ACCESS_TOKEN_TYPE = "accessToken";
+    private static final String REFRESH_TOKEN_TYPE = "refreshToken";
 
     /**
      * Chamado no construção do bean, decodifica a {@link #secretString} que está na {@code Base64} para a
@@ -46,23 +53,48 @@ public class JwtService {
         this.algorithm = Algorithm.HMAC256(keyBytes);
     }
 
+    /**
+     * Gera um {@code accessToken}
+     * @param user usado na construção do token
+     * @return {@code String} sendo o {@code accessToken}
+     */
+   public String generateAccessToken(UserDetails user){
+        return this.generateToken(user, ACCESS_TOKEN_EXPIRATION, ACCESS_TOKEN_TYPE);
+   }
 
     /**
-     * Chamado pelo {@link AuthService#login(LoginRequestDto)} para gerar o token depois do User ser validado.
-     * @param user usado para criar o payload do Token
+     * Gera um {@code refreshToken}
+     * @param user usado na construção do token
+     * @return {@code String} sendo o {@code refreshToken}
+     */
+    public String generateRefreshToken(UserDetails user){
+        return this.generateToken(user, REFRESH_TOKEN_EXPIRATION, REFRESH_TOKEN_TYPE);
+    }
+
+
+    /**
+     * Chamado pelos metodos {@link #generateAccessToken(UserDetails)} e {@link #generateRefreshToken(UserDetails)} 
+     *(dependendo do {@code tokenType}) para gerar o token depois do User ser validado.
+     * 
+     * @param user usado para criar o payload do token
+     * @param expirationMs validade do token
+     * @param tokenType tipo do token a ser criado
      * @return {@code String} JWT token
      */
-    public String generateToken(UserDetails user){
+    private String generateToken(UserDetails user, long expirationMs, String tokenType){
 
         return JWT.create()
-                .withSubject(user.getUsername()) // a qual User pertence esse token (identificador do user: email, id, etc.)
+                .withSubject(user.getUsername())// a qual User pertence esse token (identificador do user: email, id, etc.)
+                .withClaim("tokenType", tokenType)
                 .withIssuedAt(new Date()) //data de criação
                 .withExpiresAt(new Date(System.currentTimeMillis() + expirationMs)) //data de expiração
                 .sign(this.algorithm); // algoritmo + secretKey que será usado na assinatura
     }
 
     /**
-     * Extrai o email do token. Usado pelo {@link JwtAuthenticationFilter} pra saber QUEM buscar no banco.
+     * Extrai o email (subject) do token. Usado pelo {@link JwtAuthenticationFilter} e 
+     * {@link AuthService#refresh(RefreshRequestDto)} pra saber QUEM buscar no banco.
+     * 
      * @param token
      * @return {@code String} subject do token (email)
      * @throws JwtTokenWithInvalidFormatException quando o token possui um formato invalido
@@ -77,17 +109,41 @@ public class JwtService {
     }
 
     /**
-     * Chamado pelo {@link JwtAuthenticationFilter} para validar o token enviado (assinatura + expiração + dono do token)
+     *  Chama o metodo {@link #isTokenValid(String, UserDetails, String)} para validar o {@code accessToken}
+     * @param accessToken que sera validado
+     * @param user usado para verificar se o token enviado bate com o user
+     * @return {@code true} se o token for valido ou {@code false} se o token for inválido
+     */
+    public boolean isAccessTokenValid(String accessToken, UserDetails user){
+        return this.isTokenValid(accessToken, user, ACCESS_TOKEN_TYPE);
+    }
+
+    /**
+     *  Chama o metodo {@link #isTokenValid(String, UserDetails, String)} para validar o {@code refreshToken}
+     * @param refreshToken que sera validado
+     * @param user usado para verificar se o token enviado bate com o user
+     * @return {@code true} se o token for valido ou {@code false} se o token for inválido
+     */
+    public boolean isRefreshTokenValid(String refreshToken, UserDetails user){
+        return this.isTokenValid(refreshToken, user, REFRESH_TOKEN_TYPE);
+    }
+
+    /**
+     * Chamado pelo {@link #isAccessTokenValid(String, UserDetails)} para validar {@code accessToken} e
+     * {@link #isRefreshTokenValid(String, UserDetails)} para validar {@code refreshToken}
+     * (assinatura + expiração + dono do token)
      *
      * @param token que será validado
      * @param user usado para verificar se o token enviado bate com o usuario
-     * @return {@code true} se o Token for valido ou {@code false} se o Token for invalido
+     * @param tokenType indica qual tipo de token que sera validado ({@code accessToken} ou {@code refreshToken})
+     * @return {@code true} se o token for valido ou {@code false} se o token for inválido
      */
-    public boolean isTokenValid(String token, UserDetails user){
+    private boolean isTokenValid(String token, UserDetails user, String tokenType){
 
         try{
             JWT.require(this.algorithm) // monta o verificador com o MESMO algoritmo/chave usado pra assinar
-                    .withSubject(user.getUsername()) // exige que o "dono" do token bata com o usuário carregado do banco
+                    .withSubject(user.getUsername())// exige que o "dono" do token bata com o usuário carregado do banco
+                    .withClaim("tokenType", tokenType)
                     .build()
                     .verify(token);
 

@@ -36,8 +36,59 @@ public class SecurityConfig {
         this.jsonAccessDeniedHandler = jsonAccessDeniedHandler;
     }
 
+    /**
+     * <p>Permite a gente customizar as configurações de segurança da aplicação.</p>
+     *
+     * desativa a proteção padrão csrf:
+     * <blockquote><pre>
+     *  .csrf(csrf -> csrf.disable())
+     * </pre></blockquote><p>
+     *
+     *
+     *
+     * define a aplicação como sendo {@code STATELESS}:
+     * <blockquote><pre>
+     *  .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+     * </pre></blockquote><p>
+     *
+     *
+     *
+     * define as regras de autorização das requisições HTTP da aplicação:
+     * <blockquote><pre>
+     *  .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+     *          .requestMatchers(HttpMethod.GET, "/products/**").hasRole("ADMIN")
+     *          .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+     *          .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+     *          .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
+     *          .anyRequest().hasRole("ADMIN"))
+     * </pre></blockquote><p>
+     *
+     *
+     * define tratamento personalizado para {@link org.springframework.security.core.AuthenticationException}
+     *  e {@link org.springframework.security.access.AccessDeniedException}:
+     * <blockquote><pre>
+     *  .exceptionHandling(ex -> ex
+     *          .authenticationEntryPoint(this.jsonAuthEntryPoint)
+     *          .accessDeniedHandler(this.jsonAccessDeniedHandler))
+     * </pre></blockquote><p>
+     *
+     *
+     * adiciona o {@link JwtAuthenticationFilter} dentro da {@code SecurityFilterChain},
+     * mais especificamente antes do {@link UsernamePasswordAuthenticationFilter}:
+     *
+     * <blockquote><pre>
+     *  .addFilterBefore(this.jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+     * </pre></blockquote><p>
+     *
+     *
+     *
+     *
+     * @param httpSecurity builder usado para customizar a configuração de segurança da aplicação
+     * @return {@code SecurityFilterChain} representa a cadeia de filtros do Spring Security
+     * @throws Exception
+     */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, RoleHierarchy roleHierarchy) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
         return httpSecurity
                 .csrf(csrf -> csrf.disable())
@@ -47,7 +98,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(HttpMethod.GET, "/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll() //Deixar acesso apenas para ADMIN
+                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()//Deixar acesso apenas para ADMIN
+                        .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
                         .anyRequest().hasRole("ADMIN"))
 
                 .exceptionHandling(ex -> ex

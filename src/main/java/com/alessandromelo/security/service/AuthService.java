@@ -1,14 +1,15 @@
 package com.alessandromelo.security.service;
 
-import com.alessandromelo.dto.security.LoginRequestDto;
-import com.alessandromelo.dto.security.LoginResponseDto;
-import com.alessandromelo.dto.security.RegisterRequestDto;
+import com.alessandromelo.dto.security.*;
 import com.alessandromelo.entity.User;
+import com.alessandromelo.exception.security.InvalidRefreshTokenException;
 import com.alessandromelo.exception.user.EmailAlreadyExistsException;
 import com.alessandromelo.repository.UserRepository;
-import com.alessandromelo.security.userprincipal.UserPrincipal;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,17 +19,21 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
-    public AuthService(AuthenticationManager authenticationManager, UserRepository userRepository, JwtService jwtService) {
+    public AuthService(AuthenticationManager authenticationManager, UserRepository userRepository, JwtService jwtService,
+                       @Qualifier("userDetailsServiceImpl") UserDetailsService userDetailsService) {
+
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
     }
 
     /**
      *Recebe o email e senha que são validados pelo metodo {@code authenticate()}
      * @param loginRequestDto email e senha do user
-     * @return {@code LoginResponseDto} contendo o JWT token
+     * @return {@code LoginResponseDto} contendo o {@code accessToken} e o {@code refreshToken}
      */
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
 
@@ -36,11 +41,15 @@ public class AuthService {
                 loginRequestDto.getEmail(), loginRequestDto.getPassword());
 
         //verificação pra ver se o user existe no banco e se a senha bate
+        // (internamente chama o metodo loadUserByUsername())
         var auth = this.authenticationManager.authenticate(usernamePasswordAuthenticationToken);
 
-        UserPrincipal authenticatedUser = (UserPrincipal) auth.getPrincipal();
+        UserDetails authenticatedUser = (UserDetails) auth.getPrincipal();
 
-        return new LoginResponseDto(this.jwtService.generateToken(authenticatedUser));
+        String accessToken = this.jwtService.generateAccessToken(authenticatedUser);
+        String refreshToken = this.jwtService.generateRefreshToken(authenticatedUser);
+
+        return new LoginResponseDto(accessToken, refreshToken);
     }
 
 
@@ -57,4 +66,24 @@ public class AuthService {
         this.userRepository.save(new User(registerRequestDto.getuName(), registerRequestDto.getEmail(),
                 encryptedPassword, registerRequestDto.getRole()));
     }
+
+    /**
+     * Recebe o {@code refreshToken} valida e gera um novo {@code accessToken}
+     *
+     * @param refreshRequestDto contem o {@code refreshToken}
+     * @return {@code RefreshResponseDto} - contendo o novo {@code accessToken}
+     */
+    public RefreshResponseDto refresh(RefreshRequestDto refreshRequestDto){
+
+        String email = this.jwtService.extractEmail(refreshRequestDto.getRefreshToken());
+        UserDetails user = this.userDetailsService.loadUserByUsername(email);
+
+        if(!(this.jwtService.isRefreshTokenValid(refreshRequestDto.getRefreshToken(), user))){
+            throw new InvalidRefreshTokenException();
+        }
+
+        String newAccessToken = this.jwtService.generateAccessToken(user);
+        return new RefreshResponseDto(newAccessToken);
+    }
+
 }
