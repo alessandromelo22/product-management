@@ -44,11 +44,11 @@ public class Product {
         this.name = name;
     }
 
-    public ProductCategory getProductType() {
+    public ProductCategory getProductCategory() {
         return productCategory;
     }
 
-    public void setProductType(ProductCategory productCategory) {
+    public void setProductCategory(ProductCategory productCategory) {
         this.productCategory = productCategory;
     }
 
@@ -60,11 +60,11 @@ public class Product {
         this.price = price;
     }
 
-    public List<SaleProduct> getPurchaseProducts() {
+    public List<SaleProduct> getSaleProducts() {
         return saleProducts;
     }
 
-    public void setPurchaseProducts(List<SaleProduct> saleProducts) {
+    public void setSaleProducts(List<SaleProduct> saleProducts) {
         this.saleProducts = saleProducts;
     }
 }
