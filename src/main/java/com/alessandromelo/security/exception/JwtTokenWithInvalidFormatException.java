@@ -1,4 +1,4 @@
-package com.alessandromelo.exception.security;
+package com.alessandromelo.security.exception;
 
 public class JwtTokenWithInvalidFormatException extends RuntimeException {
     public JwtTokenWithInvalidFormatException() {

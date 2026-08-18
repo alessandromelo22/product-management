@@ -1,6 +1,6 @@
 package com.alessandromelo.security.filter;
 
-import com.alessandromelo.exception.security.JwtTokenWithInvalidFormatException;
+import com.alessandromelo.security.exception.JwtTokenWithInvalidFormatException;
 import com.alessandromelo.security.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

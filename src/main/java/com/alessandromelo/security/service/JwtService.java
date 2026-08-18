@@ -1,8 +1,7 @@
 package com.alessandromelo.security.service;
 
-import com.alessandromelo.dto.security.LoginRequestDto;
-import com.alessandromelo.dto.security.RefreshRequestDto;
-import com.alessandromelo.exception.security.JwtTokenWithInvalidFormatException;
+import com.alessandromelo.security.dto.RefreshRequestDto;
+import com.alessandromelo.security.exception.JwtTokenWithInvalidFormatException;
 import com.alessandromelo.security.filter.JwtAuthenticationFilter;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

@@ -1,8 +1,8 @@
 package com.alessandromelo.security.service;
 
-import com.alessandromelo.dto.security.*;
 import com.alessandromelo.entity.User;
-import com.alessandromelo.exception.security.InvalidRefreshTokenException;
+import com.alessandromelo.security.dto.*;
+import com.alessandromelo.security.exception.InvalidRefreshTokenException;
 import com.alessandromelo.exception.user.EmailAlreadyExistsException;
 import com.alessandromelo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,6 +30,22 @@ public class AuthService {
         this.userDetailsService = userDetailsService;
     }
 
+
+    public void register(RegisterRequestDto registerRequestDto) {
+
+        boolean emailAlreadyExists = this.userRepository.existsByEmail(registerRequestDto.getEmail());
+
+        if(emailAlreadyExists){
+            throw new EmailAlreadyExistsException();
+        }
+
+        String encryptedPassword = new BCryptPasswordEncoder().encode(registerRequestDto.getPassword());
+
+        this.userRepository.save(new User(registerRequestDto.getuName(), registerRequestDto.getEmail(),
+                encryptedPassword, registerRequestDto.getRole()));
+    }
+
+
     /**
      *Recebe o email e senha que são validados pelo metodo {@code authenticate()}
      * @param loginRequestDto email e senha do user
@@ -52,20 +68,6 @@ public class AuthService {
         return new LoginResponseDto(accessToken, refreshToken);
     }
 
-
-    public void register(RegisterRequestDto registerRequestDto) {
-
-        boolean emailAlreadyExists = this.userRepository.existsByEmail(registerRequestDto.getEmail());
-
-        if(emailAlreadyExists){
-            throw new EmailAlreadyExistsException();
-        }
-
-        String encryptedPassword = new BCryptPasswordEncoder().encode(registerRequestDto.getPassword());
-
-        this.userRepository.save(new User(registerRequestDto.getuName(), registerRequestDto.getEmail(),
-                encryptedPassword, registerRequestDto.getRole()));
-    }
 
     /**
      * Recebe o {@code refreshToken} valida e gera um novo {@code accessToken}

@@ -1,4 +1,4 @@
-package com.alessandromelo.dto.security;
+package com.alessandromelo.security.dto;
 
 public class LoginResponseDto {
 

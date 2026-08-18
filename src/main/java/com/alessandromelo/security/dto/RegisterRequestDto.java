@@ -1,17 +1,17 @@
-package com.alessandromelo.dto.security;
+package com.alessandromelo.security.dto;
 
 import com.alessandromelo.enums.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class RegisterRequestDto {
-    @NotBlank
+    @NotBlank(message = "username must be provided!")
     private String uName;
-    @NotBlank
+    @NotBlank(message = "email must be provided!")
     private String email;
-    @NotBlank
+    @NotBlank(message = "password must be provided!")
     private String password;
-    @NotNull
+    @NotNull(message = "role must be provided!")
     private UserRole role;
 
 

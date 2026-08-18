@@ -1,11 +1,11 @@
-package com.alessandromelo.dto.security;
+package com.alessandromelo.security.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequestDto {
-    @NotBlank
+    @NotBlank(message = "The email address must be provided!")
     private String email;
-    @NotBlank
+    @NotBlank(message = "The password must be provided!")
     private String password;
 
     public LoginRequestDto(){

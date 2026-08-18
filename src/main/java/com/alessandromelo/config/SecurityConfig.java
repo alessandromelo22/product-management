@@ -99,7 +99,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()//Deixar acesso apenas para ADMIN
-                        .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll() //deixar acesso apenas para o cliente usar (navegador)
                         .anyRequest().hasRole("ADMIN"))
 
                 .exceptionHandling(ex -> ex
@@ -110,16 +110,32 @@ public class SecurityConfig {
                 .build();
     }
 
+
+    /**
+     * Usado para autenticar o user no login
+     *
+     * @param authenticationConfiguration
+     * @return
+     * @throws Exception
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
+    /**
+     * Bean usado para encriptar e decriptar a senha do user
+     * @return
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Define hierarquia de roles.
+     * @return
+     */
     @Bean //precisa ser static
     public static RoleHierarchy roleHierarchy(){
         return RoleHierarchyImpl.withDefaultRolePrefix()
