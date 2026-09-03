@@ -4,6 +4,7 @@ import com.alessandromelo.exception.customer.CpfAlreadyExistsException;
 import com.alessandromelo.exception.customer.CustomerNotFoundException;
 import com.alessandromelo.exception.customer.PhoneNumberAlreadyExistsException;
 import com.alessandromelo.exception.global.EntityInUseException;
+import com.alessandromelo.exception.user.EmailNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,16 @@ public class GlobalExceptionHandler {
         ApiError error = new ApiError(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
+
+//USER:
+    @ExceptionHandler(EmailNotFoundException.class) //404
+    public ResponseEntity<ApiError> handleEmailNotFoundException(EmailNotFoundException exception,
+                                                                 HttpServletRequest request){
+
+        ApiError error = new ApiError(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
 
 //GLOBAL:
 

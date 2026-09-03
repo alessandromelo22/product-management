@@ -56,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try{
             String email = this.jwtService.extractEmail(token);
 
-            //validamos o token so se o subject (email) existir & Não tiver ninguem autenticado no contexto (evitar reprocessar)
+            //validamos o token so se o subject (email) existir && Não tiver ninguem autenticado no contexto (evitar reprocessar)
             if(email != null && SecurityContextHolder.getContext().getAuthentication() == null){
 
                 //recuperamos o userPrincipal
