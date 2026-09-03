@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,14 +21,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthService(AuthenticationManager authenticationManager, UserRepository userRepository, JwtService jwtService,
-                       @Qualifier("userDetailsServiceImpl") UserDetailsService userDetailsService) {
+                       @Qualifier("userDetailsServiceImpl") UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
 
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -39,7 +42,7 @@ public class AuthService {
             throw new EmailAlreadyExistsException();
         }
 
-        String encryptedPassword = new BCryptPasswordEncoder().encode(registerRequestDto.getPassword());
+        String encryptedPassword = this.passwordEncoder.encode(registerRequestDto.getPassword());
 
         this.userRepository.save(new User(registerRequestDto.getuName(), registerRequestDto.getEmail(),
                 encryptedPassword, registerRequestDto.getRole()));

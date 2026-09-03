@@ -19,6 +19,8 @@ public class UserPrincipal implements UserDetails {
     private String password;
     private UserRole role;
 
+    public UserPrincipal() {
+    }
 
     public UserPrincipal(Long id, String email, String password, UserRole role) {
         this.id = id;
