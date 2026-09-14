@@ -19,7 +19,7 @@ import java.util.List;
 @RequestMapping("/customers")
 public class CustomerController {
 
-    private CustomerService customerService;
+    private final CustomerService customerService;
 
 
     public CustomerController(CustomerService customerService) {
@@ -75,8 +75,6 @@ public class CustomerController {
             @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
             @ApiResponse(responseCode = "400", description = "Invalid input data."),
             @ApiResponse(responseCode = "404", description = "Customer not found.")
-
-
     })
     @PutMapping("/{customerId}")
     public ResponseEntity<CustomerResponseDto> update(@PathVariable Long customerId, @RequestBody @Valid CustomerRequestDto requestDto){
