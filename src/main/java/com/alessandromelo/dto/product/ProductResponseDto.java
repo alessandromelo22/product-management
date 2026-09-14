@@ -1,35 +1,26 @@
-package com.alessandromelo.entity;
+package com.alessandromelo.dto.product;
 
 import com.alessandromelo.enums.ProductCategory;
-import jakarta.persistence.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
-@Entity
-public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ProductResponseDto {
+
     private Long id;
     private String name;
     private String brand;
-    @Enumerated(value = EnumType.STRING)
     private ProductCategory productCategory;
     private BigDecimal price;
 
-    @OneToMany(mappedBy = "product")
-    private List<SaleProduct> saleProducts;
-
-    public Product() {
+    public ProductResponseDto() {
     }
 
-    public Product(Long id, String name, String brand, ProductCategory productCategory, BigDecimal price, List<SaleProduct> saleProducts) {
+    public ProductResponseDto(Long id, String name, String brand, ProductCategory productCategory, BigDecimal price) {
         this.id = id;
         this.name = name;
         this.brand = brand;
         this.productCategory = productCategory;
         this.price = price;
-        this.saleProducts = saleProducts;
     }
 
     public Long getId() {
@@ -70,13 +61,5 @@ public class Product {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
-    }
-
-    public List<SaleProduct> getSaleProducts() {
-        return saleProducts;
-    }
-
-    public void setSaleProducts(List<SaleProduct> saleProducts) {
-        this.saleProducts = saleProducts;
     }
 }

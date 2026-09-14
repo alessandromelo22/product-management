@@ -3,6 +3,7 @@ package com.alessandromelo.entity;
 import com.alessandromelo.enums.SaleStatus;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -11,10 +12,11 @@ public class Sale {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Enumerated(value = EnumType.STRING)
     private SaleStatus status;
-    private Float totalAmount;
+    private BigDecimal totalAmount;
     private Integer installments; // número de parcelas (1 = à vista)
-    private Float installmentAmount; // valor de cada parcela
+    private BigDecimal installmentAmount; // valor de cada parcela
     private LocalDateTime saleDate;
 
     @ManyToOne
@@ -26,7 +28,7 @@ public class Sale {
     public Sale() {
     }
 
-    public Sale(Long id, SaleStatus status, Float totalAmount, Integer installments, Float installmentAmount, LocalDateTime saleDate, Customer customer, List<SaleProduct> saleProducts) {
+    public Sale(Long id, SaleStatus status, BigDecimal totalAmount, Integer installments, BigDecimal installmentAmount, LocalDateTime saleDate, Customer customer, List<SaleProduct> saleProducts) {
         this.id = id;
         this.status = status;
         this.totalAmount = totalAmount;
@@ -53,11 +55,11 @@ public class Sale {
         this.status = status;
     }
 
-    public Float getTotalAmount() {
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(Float totalAmount) {
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 
@@ -69,11 +71,11 @@ public class Sale {
         this.installments = installments;
     }
 
-    public Float getInstallmentAmount() {
+    public BigDecimal getInstallmentAmount() {
         return installmentAmount;
     }
 
-    public void setInstallmentAmount(Float installmentAmount) {
+    public void setInstallmentAmount(BigDecimal installmentAmount) {
         this.installmentAmount = installmentAmount;
     }
 

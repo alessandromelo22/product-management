@@ -17,10 +17,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -69,7 +66,7 @@ class CustomerServiceTest {
     @DisplayName("getAll() should return a list of CustomerResponseDto")
     void getAllShouldReturnAListOfCustomerResponseDto() {
         //Arrange:
-        Customer customer = new CustomerBuilder().build();
+        Customer customer = Mockito.mock(Customer.class);
         CustomerResponseDto responseDTO = new CustomerResponseDtoBuilder().build();
 
         when(this.customerRepository.findAll()).thenReturn(List.of(customer));
@@ -116,7 +113,7 @@ class CustomerServiceTest {
     @DisplayName("getById() should return a CustomerResponseDto")
     void getByIdShouldReturnACustomerResponseDto() {
         //Arrange:
-        Customer customer = new CustomerBuilder().build();
+        Customer customer = Mockito.mock(Customer.class);
         CustomerResponseDto responseDTO = new CustomerResponseDtoBuilder().build();
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
@@ -147,7 +144,7 @@ class CustomerServiceTest {
     @DisplayName("create() should throw PhoneNumberAlreadyExistsException")
     void createShouldThrowPhoneNumberAlreadyExistsException(){
         //Arrange:
-        CustomerRequestDto requestDto = new CustomerRequestDtoBuilder().build();
+        CustomerRequestDto requestDto = Mockito.mock(CustomerRequestDto.class);
 
         when(this.customerRepository.existsByCpf(requestDto.getCpf())).thenReturn(false);
         when(this.customerRepository.existsByPhoneNumber(requestDto.getPhoneNumber())).thenReturn(true);
@@ -164,7 +161,7 @@ class CustomerServiceTest {
     @DisplayName("create() should throw CpfAlreadyExistsException")
     void createShouldThrowCpfAlreadyExistsException(){
         //Arrange:
-        CustomerRequestDto requestDto = new CustomerRequestDtoBuilder().build();
+        CustomerRequestDto requestDto = Mockito.mock(CustomerRequestDto.class);
 
         when(this.customerRepository.existsByCpf(requestDto.getCpf())).thenReturn(true);
 
@@ -225,11 +222,7 @@ class CustomerServiceTest {
     @DisplayName("update() should throw CustomerNotFoundException")
     void updateShouldThrowCustomerNotFoundException(){
         //Arrange:
-        CustomerRequestDto requestDto = new CustomerRequestDtoBuilder()
-                .withName("Maria")
-                .withPhoneNumber("085769945")
-                .withCpf("976.566.435-67")
-                .build();
+        CustomerRequestDto requestDto = Mockito.mock(CustomerRequestDto.class);
 
         when(this.customerRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -245,13 +238,8 @@ class CustomerServiceTest {
     @DisplayName("update() should throw PhoneNumberAlreadyExistsException")
     void updateShouldThrowPhoneNumberAlreadyExistsException(){
         //Arrange:
-        CustomerRequestDto requestDto = new CustomerRequestDtoBuilder()
-                .withName("Maria")
-                .withPhoneNumber("085769945")
-                .withCpf("976.566.435-67")
-                .build();
-
-        Customer customer = new CustomerBuilder().build();
+        CustomerRequestDto requestDto = Mockito.mock(CustomerRequestDto.class);
+        Customer customer = Mockito.mock(Customer.class);
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(this.customerRepository.existsByPhoneNumberAndIdNot(requestDto.getPhoneNumber(), 1L)).thenReturn(true);
@@ -268,13 +256,8 @@ class CustomerServiceTest {
     @DisplayName("update() should throw CpfAlreadyExistsException")
     void updateShouldThrowCpfAlreadyExistsException(){
         //Arrange:
-        CustomerRequestDto requestDto = new CustomerRequestDtoBuilder()
-                .withName("Maria")
-                .withPhoneNumber("085769945")
-                .withCpf("976.566.435-67")
-                .build();
-
-        Customer customer = new CustomerBuilder().build();
+        CustomerRequestDto requestDto = Mockito.mock(CustomerRequestDto.class);
+        Customer customer = Mockito.mock(Customer.class);
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(this.customerRepository.existsByPhoneNumberAndIdNot(requestDto.getPhoneNumber(), 1L)).thenReturn(false);
@@ -362,7 +345,7 @@ class CustomerServiceTest {
     @DisplayName("deleteById() should throw EntityInUseException")
     void deleteByIdShouldThrowEntityInUseException(){
         //Arrange:
-        Customer customer = new CustomerBuilder().build();
+        Customer customer = Mockito.mock(Customer.class);
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(this.saleRepository.existsByCustomerId(1L)).thenReturn(true);
@@ -379,7 +362,7 @@ class CustomerServiceTest {
     @DisplayName("deleteById() should call the delete() method")
     void deleteByIdShouldCallTheDeleteMethod(){
         //Arrange:
-        Customer customer = new CustomerBuilder().build();
+        Customer customer = Mockito.mock(Customer.class);
 
         when(this.customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(this.saleRepository.existsByCustomerId(1L)).thenReturn(false);
