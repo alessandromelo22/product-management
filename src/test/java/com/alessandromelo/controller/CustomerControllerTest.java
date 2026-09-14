@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -219,7 +220,7 @@ class CustomerControllerTest {
     void deleteByIdShouldReturnA409StatusWhenTheEntityHasARelationship() throws Exception {
         //Arrange
         Customer registeredCustomer = this.customerRepository.save(new Customer(null, "José", "34988760098", "327.197.730-23", null));
-        Sale registered = this.saleRepository.save(new Sale(null, SaleStatus.PAID, 100.00F, 1, 100.00F, LocalDateTime.now(), registeredCustomer, null));
+        this.saleRepository.save(new Sale(null, SaleStatus.PAID, new BigDecimal("100"), 1, new BigDecimal("100"), LocalDateTime.now(), registeredCustomer, null));
 
         //Act
         //Assert:

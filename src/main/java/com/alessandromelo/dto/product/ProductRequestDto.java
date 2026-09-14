@@ -1,43 +1,30 @@
-package com.alessandromelo.entity;
+package com.alessandromelo.dto.product;
 
 import com.alessandromelo.enums.ProductCategory;
-import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
-import java.util.List;
 
-@Entity
-public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class ProductRequestDto {
+
+    @NotBlank(message = "The Product name cannot be left blank")
     private String name;
+    @NotBlank(message = "The Product brand cannot be left blank")
     private String brand;
-    @Enumerated(value = EnumType.STRING)
+    @NotNull(message = "The productCategory cannot be null")
     private ProductCategory productCategory;
+    @NotNull(message = "The Product price cannot be left blank")
     private BigDecimal price;
 
-    @OneToMany(mappedBy = "product")
-    private List<SaleProduct> saleProducts;
-
-    public Product() {
+    public ProductRequestDto() {
     }
 
-    public Product(Long id, String name, String brand, ProductCategory productCategory, BigDecimal price, List<SaleProduct> saleProducts) {
-        this.id = id;
+    public ProductRequestDto(String name, String brand, ProductCategory productCategory, BigDecimal price) {
         this.name = name;
         this.brand = brand;
         this.productCategory = productCategory;
         this.price = price;
-        this.saleProducts = saleProducts;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -70,13 +57,5 @@ public class Product {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
-    }
-
-    public List<SaleProduct> getSaleProducts() {
-        return saleProducts;
-    }
-
-    public void setSaleProducts(List<SaleProduct> saleProducts) {
-        this.saleProducts = saleProducts;
     }
 }

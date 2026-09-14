@@ -10,6 +10,7 @@ import com.alessandromelo.exception.global.EntityInUseException;
 import com.alessandromelo.mapper.CustomerMapper;
 import com.alessandromelo.repository.CustomerRepository;
 import com.alessandromelo.repository.SaleRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,6 +48,7 @@ public class CustomerService {
     }
 
 //POST
+    @Transactional
     public CustomerResponseDto create(CustomerRequestDto requestDto){
 
         boolean phoneNumberExists = this.customerRepository.existsByPhoneNumber(requestDto.getPhoneNumber());
@@ -64,6 +66,7 @@ public class CustomerService {
     }
 
 //PUT
+    @Transactional
     public CustomerResponseDto update(Long customerId, CustomerRequestDto requestDto){
 
         return this.customerRepository.findById(customerId)
@@ -88,6 +91,7 @@ public class CustomerService {
     }
 
 //DELETE
+    @Transactional
     public void deleteById(Long customerId){
 
         Customer customer = this.customerRepository.findById(customerId)

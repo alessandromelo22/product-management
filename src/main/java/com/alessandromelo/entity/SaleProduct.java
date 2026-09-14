@@ -3,13 +3,15 @@ package com.alessandromelo.entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 public class SaleProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Integer quantity;
-    private Float unitPrice;
+    private BigDecimal unitPrice;
 
     @ManyToOne
     private Sale sale; //FK
@@ -20,7 +22,7 @@ public class SaleProduct {
     public SaleProduct() {
     }
 
-    public SaleProduct(Long id, Integer quantity, Float unitPrice, Sale sale, Product product) {
+    public SaleProduct(Long id, Integer quantity, BigDecimal unitPrice, Sale sale, Product product) {
         this.id = id;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
@@ -44,11 +46,11 @@ public class SaleProduct {
         this.quantity = quantity;
     }
 
-    public Float getUnitPrice() {
+    public BigDecimal getUnitPrice() {
         return unitPrice;
     }
 
-    public void setUnitPrice(Float unitPrice) {
+    public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
     }
 
