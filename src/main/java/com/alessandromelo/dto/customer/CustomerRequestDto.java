@@ -3,11 +3,11 @@ package com.alessandromelo.dto.customer;
 import jakarta.validation.constraints.NotBlank;
 
 public class CustomerRequestDto {
-    @NotBlank
+    @NotBlank(message = "The Customer 'name' cannot be left blank")
     private String name;
-    @NotBlank
+    @NotBlank(message = "The Customer 'phoneNumber' cannot be left blank")
     private String phoneNumber;
-    @NotBlank
+    @NotBlank(message = "The Customer 'cpf' cannot be left blank")
     //Colocar a annotation @CPF e alterar os testes
     private String cpf;
 
