@@ -1,5 +1,6 @@
 package com.alessandromelo.service;
 
+import com.alessandromelo.dto.sale.SaleDateRequestDto;
 import com.alessandromelo.dto.sale.SaleRequestDto;
 import com.alessandromelo.dto.sale.SaleResponseDto;
 import com.alessandromelo.entity.Customer;
@@ -10,8 +11,12 @@ import com.alessandromelo.mapper.SaleMapper;
 import com.alessandromelo.repository.CustomerRepository;
 import com.alessandromelo.repository.SaleRepository;
 import jakarta.transaction.Transactional;
+import net.bytebuddy.asm.Advice;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -44,6 +49,19 @@ public class SaleService {
         );
 
         return this.saleMapper.toResponse(sale);
+    }
+
+//GET
+    public List<SaleResponseDto> getBySaleDate(SaleDateRequestDto requestDto){
+
+        //converte para o inicio da data (00:00:00)
+        LocalDateTime start = requestDto.getStart().atStartOfDay();
+        //converte para o fim da data(23:59:59.999999999)
+        LocalDateTime end = requestDto.getEnd().atTime(LocalTime.MAX);
+
+        List<Sale> sales = this.saleRepository.findBySaleDateBetween(start, end);
+
+        return sales.stream().map(this.saleMapper::toResponse).toList();
     }
 
 //POST
