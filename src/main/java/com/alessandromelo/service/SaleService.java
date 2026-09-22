@@ -11,10 +11,8 @@ import com.alessandromelo.mapper.SaleMapper;
 import com.alessandromelo.repository.CustomerRepository;
 import com.alessandromelo.repository.SaleRepository;
 import jakarta.transaction.Transactional;
-import net.bytebuddy.asm.Advice;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
