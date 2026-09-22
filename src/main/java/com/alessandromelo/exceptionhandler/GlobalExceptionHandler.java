@@ -5,6 +5,7 @@ import com.alessandromelo.exception.customer.CustomerNotFoundException;
 import com.alessandromelo.exception.customer.PhoneNumberAlreadyExistsException;
 import com.alessandromelo.exception.global.EntityInUseException;
 import com.alessandromelo.exception.product.ProductNotFoundException;
+import com.alessandromelo.exception.sale.SaleNotFoundException;
 import com.alessandromelo.exception.user.EmailNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -61,6 +62,16 @@ public class GlobalExceptionHandler {
         ApiError error = new ApiError(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+
+//SALE:
+    @ExceptionHandler(SaleNotFoundException.class)//404
+    public ResponseEntity<ApiError> handleSaleNotFoundException(SaleNotFoundException exception,
+                                                                HttpServletRequest request){
+        ApiError error = new ApiError(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
 
 
 //GLOBAL:

@@ -6,6 +6,7 @@ import com.alessandromelo.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Product", description = "Operations focused on products management.")
 @RestController
 @RequestMapping("/products")
 public class ProductController {
@@ -50,7 +52,7 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(this.productService.getById(productId));
     }
 
-
+//POST
     @Operation(
             summary = "Register a new product",
             description = "Register a new product in the database.")
@@ -63,7 +65,7 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.productService.create(requestDto));
     }
 
-
+//PUT
     @Operation(
             summary = "Update a product",
             description = "Updates a product already registered in the database.")
@@ -78,13 +80,14 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(this.productService.update(productId, requestDto));
     }
 
+//DELETE
     @Operation(
             summary = "Delete a product",
             description = "Delete a product already registered in the database.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Product successfully updated."),
-            @ApiResponse(responseCode = "400", description = "Invalid input data."),
-            @ApiResponse(responseCode = "404", description = "Customer not found."),
+            @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
+            @ApiResponse(responseCode = "404", description = "Product not found."),
             @ApiResponse(responseCode = "409", description = "Deletion not performed - Product is linked to another entity.")
 
     })

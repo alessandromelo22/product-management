@@ -8,13 +8,13 @@ import java.math.BigDecimal;
 
 public class ProductRequestDto {
 
-    @NotBlank(message = "The Product name cannot be left blank")
+    @NotBlank(message = "The Product 'name' cannot be left blank")
     private String name;
-    @NotBlank(message = "The Product brand cannot be left blank")
+    @NotBlank(message = "The Product 'brand' cannot be left blank")
     private String brand;
-    @NotNull(message = "The productCategory cannot be null")
+    @NotNull(message = "The 'productCategory' cannot be null")
     private ProductCategory productCategory;
-    @NotNull(message = "The Product price cannot be left blank")
+    @NotNull(message = "The Product 'price' cannot be left blank")
     private BigDecimal price;
 
     public ProductRequestDto() {
