@@ -15,7 +15,7 @@ public class Product {
     private String brand;
     @Enumerated(value = EnumType.STRING)
     private ProductCategory productCategory;
-    private BigDecimal price;
+    private BigDecimal price; // preço de tabela
 
     @OneToMany(mappedBy = "product")
     private List<SaleProduct> saleProducts;
