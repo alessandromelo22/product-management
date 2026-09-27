@@ -91,6 +91,7 @@ public class CustomerService {
     }
 
 //DELETE
+    //Depois pensar se deve ser tirado essa
     @Transactional
     public void deleteById(Long customerId){
 

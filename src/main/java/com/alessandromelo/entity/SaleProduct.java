@@ -11,7 +11,7 @@ public class SaleProduct {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Integer quantity;
-    private BigDecimal unitPrice;
+    private BigDecimal unitPrice; //preço que foi realmente cobrado
 
     @ManyToOne
     private Sale sale; //FK

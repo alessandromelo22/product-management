@@ -6,9 +6,11 @@ import com.alessandromelo.dto.sale.SaleResponseDto;
 import com.alessandromelo.entity.Customer;
 import com.alessandromelo.entity.Sale;
 import com.alessandromelo.exception.customer.CustomerNotFoundException;
+import com.alessandromelo.exception.global.EntityInUseException;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
 import com.alessandromelo.mapper.SaleMapper;
 import com.alessandromelo.repository.CustomerRepository;
+import com.alessandromelo.repository.SaleProductRepository;
 import com.alessandromelo.repository.SaleRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -25,10 +27,13 @@ public class SaleService {
 
     private final CustomerRepository customerRepository;
 
-    public SaleService(SaleRepository saleRepository, SaleMapper saleMapper, CustomerRepository customerRepository) {
+    private final SaleProductRepository saleProductRepository;
+
+    public SaleService(SaleRepository saleRepository, SaleMapper saleMapper, CustomerRepository customerRepository, SaleProductRepository saleProductRepository) {
         this.saleRepository = saleRepository;
         this.saleMapper = saleMapper;
         this.customerRepository = customerRepository;
+        this.saleProductRepository = saleProductRepository;
     }
 
 
@@ -87,27 +92,29 @@ public class SaleService {
     @Transactional
     public SaleResponseDto update(Long saleId, SaleRequestDto requestDto){
 
-        Sale sale = this.saleRepository.findById(saleId).orElseThrow(
-                () -> new SaleNotFoundException(saleId)
-        );
+        return this.saleRepository.findById(saleId).map(
+                sale -> {
 
-        Customer customer = null;
+                    Customer customer = null;
 
-        if(requestDto.getCustomerId() != null){
+                    if(requestDto.getCustomerId() != null){
 
-            customer = this.customerRepository.findById(requestDto.getCustomerId()).orElseThrow(
-                    () -> new CustomerNotFoundException(requestDto.getCustomerId())
-            );
-        }
+                        customer = this.customerRepository.findById(requestDto.getCustomerId()).orElseThrow(
+                                () -> new CustomerNotFoundException(requestDto.getCustomerId())
+                        );
+                    }
 
-        sale.setStatus(requestDto.getStatus());
-        sale.setTotalAmount(requestDto.getTotalAmount());
-        sale.setInstallments(requestDto.getInstallments());
-        sale.setInstallmentAmount(requestDto.getInstallmentAmount());
-        sale.setSaleDate(requestDto.getSaleDate());
-        sale.setCustomer(customer);
+                    sale.setStatus(requestDto.getStatus());
+                    sale.setTotalAmount(requestDto.getTotalAmount());
+                    sale.setInstallments(requestDto.getInstallments());
+                    sale.setInstallmentAmount(requestDto.getInstallmentAmount());
+                    sale.setSaleDate(requestDto.getSaleDate());
+                    sale.setCustomer(customer);
 
-        return this.saleMapper.toResponse(this.saleRepository.save(sale));
+                    return this.saleMapper.toResponse(this.saleRepository.save(sale));
+                }
+        ).orElseThrow(() -> new SaleNotFoundException(saleId));
+
     }
 
 //DELETE
@@ -117,6 +124,14 @@ public class SaleService {
         Sale sale = this.saleRepository.findById(saleId).orElseThrow(
                 () -> new SaleNotFoundException(saleId)
         );
+
+        // Procuro dentro da tabela que a entidade Sale se relaciona (no caso a SaleProduct) se possui algum registro que
+        // esta ligado a entidade que eu estou tentando deletar
+        boolean hasSaleProducts = this.saleProductRepository.existsBySaleId(saleId);
+
+        if (hasSaleProducts){
+            throw new EntityInUseException(Sale.class, saleId);
+        }
 
         this.saleRepository.delete(sale);
     }
