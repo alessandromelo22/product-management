@@ -1,22 +1,31 @@
 package com.alessandromelo.service;
 
 import com.alessandromelo.dto.sale.SaleDateRequestDto;
+import com.alessandromelo.dto.sale.SalePatchDateRequestDto;
 import com.alessandromelo.dto.sale.SaleRequestDto;
 import com.alessandromelo.dto.sale.SaleResponseDto;
 import com.alessandromelo.entity.Customer;
+import com.alessandromelo.entity.Product;
 import com.alessandromelo.entity.Sale;
+import com.alessandromelo.entity.SaleProduct;
+import com.alessandromelo.enums.SaleStatus;
 import com.alessandromelo.exception.customer.CustomerNotFoundException;
 import com.alessandromelo.exception.global.EntityInUseException;
+import com.alessandromelo.exception.product.ProductNotFoundException;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
 import com.alessandromelo.mapper.SaleMapper;
+import com.alessandromelo.mapper.SaleProductMapper;
 import com.alessandromelo.repository.CustomerRepository;
+import com.alessandromelo.repository.ProductRepository;
 import com.alessandromelo.repository.SaleProductRepository;
 import com.alessandromelo.repository.SaleRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -25,15 +34,28 @@ public class SaleService {
     private final SaleRepository saleRepository;
     private final SaleMapper saleMapper;
 
-    private final CustomerRepository customerRepository;
-
+    private final SaleProductMapper saleProductMapper;
     private final SaleProductRepository saleProductRepository;
 
-    public SaleService(SaleRepository saleRepository, SaleMapper saleMapper, CustomerRepository customerRepository, SaleProductRepository saleProductRepository) {
+    private final CustomerRepository customerRepository;
+
+    private final ProductRepository productRepository;
+
+
+    public SaleService(SaleRepository saleRepository, SaleMapper saleMapper, SaleProductMapper saleProductMapper, CustomerRepository customerRepository, SaleProductRepository saleProductRepository, ProductRepository productRepository) {
         this.saleRepository = saleRepository;
         this.saleMapper = saleMapper;
+        this.saleProductMapper = saleProductMapper;
         this.customerRepository = customerRepository;
         this.saleProductRepository = saleProductRepository;
+        this.productRepository = productRepository;
+    }
+
+
+//Calcular 'totalAmount'
+    private BigDecimal calculatesTheTotalAmount(Integer quantity, BigDecimal unitPrice){
+
+        return unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
 
 
@@ -71,6 +93,7 @@ public class SaleService {
     @Transactional
     public SaleResponseDto create(SaleRequestDto requestDto){
 
+        //Customer validation
         Customer customer;
 
         if(requestDto.getCustomerId() != null){
@@ -82,10 +105,35 @@ public class SaleService {
             customer = null;
         }
 
+        //Sale
         Sale sale = this.saleMapper.toEntity(requestDto);
         sale.setCustomer(customer);
 
-        return this.saleMapper.toResponse(this.saleRepository.save(sale));
+        if(sale.getSaleDate() == null){
+            sale.setSaleDate(LocalDateTime.now());
+        }
+
+
+        List<SaleProduct> saleProductList = new ArrayList<>();
+        //Product
+        for(int i = 0; i < requestDto.getSaleProductResumeRequestDtos().size(); i++){
+
+            int finalI = i;
+            Product product = this.productRepository.findById(requestDto.getSaleProductResumeRequestDtos().get(i).getProductId()).orElseThrow(
+                    () -> new ProductNotFoundException(requestDto.getSaleProductResumeRequestDtos().get(finalI).getProductId())
+            );
+
+            //SaleProduct
+            SaleProduct saleProduct = this.saleProductMapper.toEntity(requestDto.getSaleProductResumeRequestDtos().get(i));
+            saleProduct.setSale(sale);
+            saleProduct.setProduct(product);
+
+            this.saleProductRepository.save(saleProduct);
+            saleProductList.add(saleProduct);
+        }
+        this.saleRepository.save(sale);
+
+        return this.saleMapper.toResponse(sale, saleProductList);
     }
 
 //PUT
@@ -115,6 +163,32 @@ public class SaleService {
                 }
         ).orElseThrow(() -> new SaleNotFoundException(saleId));
 
+    }
+
+
+//PATCH:
+    @Transactional
+    public SaleResponseDto updateDate(Long saleId, SalePatchDateRequestDto requestDto){
+
+        Sale sale = this.saleRepository.findById(saleId).orElseThrow(
+                () -> new SaleNotFoundException(saleId)
+        );
+
+        this.saleMapper.updateSaleDate(requestDto, sale);
+
+        return this.saleMapper.toResponse(this.saleRepository.save(sale));
+    }
+
+//PATCH:
+    @Transactional
+    public void cancelSale(Long saleId){
+
+        Sale sale = this.saleRepository.findById(saleId).orElseThrow(
+                () -> new SaleNotFoundException(saleId)
+        );
+
+        sale.setStatus(SaleStatus.CANCELLED);
+        this.saleRepository.save(sale);
     }
 
 //DELETE

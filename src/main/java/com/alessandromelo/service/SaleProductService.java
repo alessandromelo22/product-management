@@ -47,7 +47,7 @@ public class SaleProductService {
     public SaleProductResponseDto getById(Long saleProductId){
 
         SaleProduct saleProduct = this.saleProductRepository.findById(saleProductId).orElseThrow(
-                () -> new SaleProductNotFoundException(saleProductId)
+                () -> SaleProductNotFoundException.bySaleProductId(saleProductId)
         );
 
         return this.saleProductMapper.toResponse(saleProduct);

@@ -21,7 +21,7 @@ public class Sale {
 
     @ManyToOne
     private Customer customer; //(FK)
-    @OneToMany(mappedBy = "sale")
+    @OneToMany(mappedBy = "sale", fetch = FetchType.LAZY)
     private List<SaleProduct> saleProducts;
 
 

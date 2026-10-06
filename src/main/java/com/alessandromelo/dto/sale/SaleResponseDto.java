@@ -1,13 +1,18 @@
 package com.alessandromelo.dto.sale;
 
+import com.alessandromelo.dto.saleproduct.SaleProductResumeResponseDto;
 import com.alessandromelo.enums.SaleStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class SaleResponseDto {
 
     private Long id;
+
+    private List<SaleProductResumeResponseDto> saleProductResumeResponseDtos;
+
     private SaleStatus status;
     private BigDecimal totalAmount;
     private Integer installments; //número de parcelas (1 = à vista)
@@ -18,8 +23,9 @@ public class SaleResponseDto {
     public SaleResponseDto() {
     }
 
-    public SaleResponseDto(Long id, SaleStatus status, BigDecimal totalAmount, Integer installments, BigDecimal installmentAmount, LocalDateTime saleDate, Long customerId) {
+    public SaleResponseDto(Long id, List<SaleProductResumeResponseDto> saleProductResumeResponseDtos, SaleStatus status, BigDecimal totalAmount, Integer installments, BigDecimal installmentAmount, LocalDateTime saleDate, Long customerId) {
         this.id = id;
+        this.saleProductResumeResponseDtos = saleProductResumeResponseDtos;
         this.status = status;
         this.totalAmount = totalAmount;
         this.installments = installments;
@@ -30,6 +36,14 @@ public class SaleResponseDto {
 
     public Long getId() {
         return id;
+    }
+
+    public List<SaleProductResumeResponseDto> getSaleProductResumeResponseDtos() {
+        return saleProductResumeResponseDtos;
+    }
+
+    public void setSaleProductResumeResponseDtos(List<SaleProductResumeResponseDto> saleProductResumeResponseDtos) {
+        this.saleProductResumeResponseDtos = saleProductResumeResponseDtos;
     }
 
     public void setId(Long id) {

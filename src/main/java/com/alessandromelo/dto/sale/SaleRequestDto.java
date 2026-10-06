@@ -1,12 +1,20 @@
 package com.alessandromelo.dto.sale;
 
+import com.alessandromelo.dto.saleproduct.SaleProductResumeRequestDto;
 import com.alessandromelo.enums.SaleStatus;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class SaleRequestDto {
+
+    @Valid
+    @NotEmpty
+    private List<SaleProductResumeRequestDto> saleProductResumeRequestDtos;
 
     @NotNull(message = "The Sale 'status' cannot be null")
     private SaleStatus status;
@@ -16,7 +24,6 @@ public class SaleRequestDto {
     private Integer installments; // número de parcelas (1 = à vista)
     @NotNull(message = "The Sale 'installmentAmount' cannot be null")
     private BigDecimal installmentAmount;// valor de cada parcela
-    @NotNull(message = "The Sale 'saleDate' cannot be null")
     private LocalDateTime saleDate;
     //Nao vou obrigar ser passado um customerId porque as vezes ela vai vender pra algume novo e nao vai lembrar/conseguir pegar os dados da pessoa
     private Long customerId;
@@ -25,13 +32,22 @@ public class SaleRequestDto {
     public SaleRequestDto() {
     }
 
-    public SaleRequestDto(SaleStatus status, BigDecimal totalAmount, Integer installments, BigDecimal installmentAmount, LocalDateTime saleDate, Long customerId) {
+    public SaleRequestDto(List<SaleProductResumeRequestDto> saleProductResumeRequestDtos, SaleStatus status, BigDecimal totalAmount, Integer installments, BigDecimal installmentAmount, LocalDateTime saleDate, Long customerId) {
+        this.saleProductResumeRequestDtos = saleProductResumeRequestDtos;
         this.status = status;
         this.totalAmount = totalAmount;
         this.installments = installments;
         this.installmentAmount = installmentAmount;
         this.saleDate = saleDate;
         this.customerId = customerId;
+    }
+
+    public List<SaleProductResumeRequestDto> getSaleProductResumeRequestDtos() {
+        return saleProductResumeRequestDtos;
+    }
+
+    public void setSaleProductResumeRequestDtos(List<SaleProductResumeRequestDto> saleProductResumeRequestDtos) {
+        this.saleProductResumeRequestDtos = saleProductResumeRequestDtos;
     }
 
     public SaleStatus getStatus() {
