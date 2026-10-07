@@ -1,6 +1,7 @@
 package com.alessandromelo.controller;
 
 import com.alessandromelo.dto.sale.SaleDateRequestDto;
+import com.alessandromelo.dto.sale.SalePatchDateRequestDto;
 import com.alessandromelo.dto.sale.SaleRequestDto;
 import com.alessandromelo.dto.sale.SaleResponseDto;
 import com.alessandromelo.service.SaleService;
@@ -80,21 +81,30 @@ public class SaleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.saleService.create(requestDto));
    }
 
-//PUT
+//PATCH
     @Operation(
-            summary = "Update a sale",
+            summary = "Update a sale date",
             description = "Updates a sale already registered in the database.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sale successfully updated."),
+            @ApiResponse(responseCode = "200", description = "sale date successfully updated."),
             @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
             @ApiResponse(responseCode = "400", description = "Invalid input data."),
             @ApiResponse(responseCode = "404", description = "Sale not found."),
-            @ApiResponse(responseCode = "404", description = "Customer not found.")
     })
-    @PutMapping("/{saleId}")
-    public ResponseEntity<SaleResponseDto> update(@PathVariable Long saleId, @Valid @RequestBody SaleRequestDto requestDto){
-        return ResponseEntity.status(HttpStatus.OK).body(this.saleService.update(saleId, requestDto));
+    @PatchMapping("/{saleId}")
+    public ResponseEntity<SaleResponseDto> updateSaleDate(@PathVariable Long saleId, @Valid @RequestBody SalePatchDateRequestDto requestDto){
+        return ResponseEntity.status(HttpStatus.OK).body(this.saleService.updateSaleDate(saleId, requestDto));
     }
+
+//PATCH
+
+
+    @PatchMapping("/{saleId}/cancel-sale")
+    public ResponseEntity<Void> cancelSale(@PathVariable Long saleId){
+        this.saleService.cancelSale(saleId);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
 
 //DELETE
     @Operation(

@@ -4,6 +4,7 @@ import com.alessandromelo.dto.sale.SaleDateRequestDto;
 import com.alessandromelo.dto.sale.SalePatchDateRequestDto;
 import com.alessandromelo.dto.sale.SaleRequestDto;
 import com.alessandromelo.dto.sale.SaleResponseDto;
+import com.alessandromelo.dto.saleproduct.SaleProductResumeRequestDto;
 import com.alessandromelo.entity.Customer;
 import com.alessandromelo.entity.Product;
 import com.alessandromelo.entity.Sale;
@@ -52,10 +53,26 @@ public class SaleService {
     }
 
 
-//Calcular 'totalAmount'
-    private BigDecimal calculatesTheTotalAmount(Integer quantity, BigDecimal unitPrice){
 
-        return unitPrice.multiply(BigDecimal.valueOf(quantity));
+//Calcular 'totalAmount'
+    private BigDecimal calculatesTheTotalAmount(List<SaleProductResumeRequestDto> saleProductResumeRequestDtos){
+
+        BigDecimal totalAmount = null;
+
+        for (SaleProductResumeRequestDto saleProductResumeRequestDto : saleProductResumeRequestDtos) {
+            // se 'unitPrice' nao for informado sera settado com o valor de Product.price
+            if(saleProductResumeRequestDto.getUnitPrice() == null){
+                saleProductResumeRequestDto.setUnitPrice(this.productRepository.findById(saleProductResumeRequestDto.getProductId()).get().getPrice());
+            }
+
+            totalAmount.add(saleProductResumeRequestDto.getUnitPrice().multiply(BigDecimal.valueOf(saleProductResumeRequestDto.getQuantity())));
+        }
+        return totalAmount;
+    }
+
+//Calcula 'installmentAmount' de acordo com a quantidade de 'installments':
+    private BigDecimal calculatesTheInstallmentAmount(BigDecimal totalAmount, Integer installments){
+        return totalAmount.divide(BigDecimal.valueOf(installments));
     }
 
 
@@ -66,7 +83,7 @@ public class SaleService {
         return sales.stream().map(this.saleMapper::toResponse).toList();
     }
 
-//GET
+//GET (testar para ver se o problema de N+1 foi resolvido)
     public SaleResponseDto getById(Long saleId) {
 
         Sale sale = this.saleRepository.findById(saleId).orElseThrow(
@@ -76,7 +93,7 @@ public class SaleService {
         return this.saleMapper.toResponse(sale);
     }
 
-//GET
+//GET (testar para ver se o problema de N+1 foi resolvido)
     public List<SaleResponseDto> getBySaleDate(SaleDateRequestDto requestDto){
 
         //converte para o inicio da data (00:00:00)
@@ -92,7 +109,6 @@ public class SaleService {
 //POST
     @Transactional
     public SaleResponseDto create(SaleRequestDto requestDto){
-
         //Customer validation
         Customer customer;
 
@@ -108,14 +124,19 @@ public class SaleService {
         //Sale
         Sale sale = this.saleMapper.toEntity(requestDto);
         sale.setCustomer(customer);
-
+        //setta 'saleDate' se nao for passado nenhuma data na requisição
         if(sale.getSaleDate() == null){
             sale.setSaleDate(LocalDateTime.now());
         }
 
+        //setta o 'totalAmount' de Sale:
+        sale.setTotalAmount(this.calculatesTheTotalAmount(requestDto.getSaleProductResumeRequestDtos()));
+
+        //setta o 'installmentAmount' de Sale:
+        sale.setInstallmentAmount(this.calculatesTheInstallmentAmount(sale.getTotalAmount(), sale.getInstallments()));
 
         List<SaleProduct> saleProductList = new ArrayList<>();
-        //Product
+        //Product: (loop para percorrer pelo Product de cada SaleProductResumeRequestDto da List e validar se ele existe no banco)
         for(int i = 0; i < requestDto.getSaleProductResumeRequestDtos().size(); i++){
 
             int finalI = i;
@@ -123,8 +144,10 @@ public class SaleService {
                     () -> new ProductNotFoundException(requestDto.getSaleProductResumeRequestDtos().get(finalI).getProductId())
             );
 
-            //SaleProduct
+            //SaleProduct:
             SaleProduct saleProduct = this.saleProductMapper.toEntity(requestDto.getSaleProductResumeRequestDtos().get(i));
+
+            //setta a Sale e Product em SaleProduct
             saleProduct.setSale(sale);
             saleProduct.setProduct(product);
 
@@ -136,39 +159,9 @@ public class SaleService {
         return this.saleMapper.toResponse(sale, saleProductList);
     }
 
-//PUT
-    @Transactional
-    public SaleResponseDto update(Long saleId, SaleRequestDto requestDto){
-
-        return this.saleRepository.findById(saleId).map(
-                sale -> {
-
-                    Customer customer = null;
-
-                    if(requestDto.getCustomerId() != null){
-
-                        customer = this.customerRepository.findById(requestDto.getCustomerId()).orElseThrow(
-                                () -> new CustomerNotFoundException(requestDto.getCustomerId())
-                        );
-                    }
-
-                    sale.setStatus(requestDto.getStatus());
-                    sale.setTotalAmount(requestDto.getTotalAmount());
-                    sale.setInstallments(requestDto.getInstallments());
-                    sale.setInstallmentAmount(requestDto.getInstallmentAmount());
-                    sale.setSaleDate(requestDto.getSaleDate());
-                    sale.setCustomer(customer);
-
-                    return this.saleMapper.toResponse(this.saleRepository.save(sale));
-                }
-        ).orElseThrow(() -> new SaleNotFoundException(saleId));
-
-    }
-
-
 //PATCH:
     @Transactional
-    public SaleResponseDto updateDate(Long saleId, SalePatchDateRequestDto requestDto){
+    public SaleResponseDto updateSaleDate(Long saleId, SalePatchDateRequestDto requestDto){
 
         Sale sale = this.saleRepository.findById(saleId).orElseThrow(
                 () -> new SaleNotFoundException(saleId)

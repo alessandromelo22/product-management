@@ -14,7 +14,7 @@ public class SaleResponseDto {
     private List<SaleProductResumeResponseDto> saleProductResumeResponseDtos;
 
     private SaleStatus status;
-    private BigDecimal totalAmount;
+    private BigDecimal totalAmount; //valor total da compra
     private Integer installments; //número de parcelas (1 = à vista)
     private BigDecimal installmentAmount; //valor de cada parcela
     private LocalDateTime saleDate;
