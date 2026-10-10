@@ -11,16 +11,18 @@ public class ProductResponseDto {
     private String brand;
     private ProductCategory productCategory;
     private BigDecimal price;
+    private Integer stock;
 
     public ProductResponseDto() {
     }
 
-    public ProductResponseDto(Long id, String name, String brand, ProductCategory productCategory, BigDecimal price) {
+    public ProductResponseDto(Long id, String name, String brand, ProductCategory productCategory, BigDecimal price, Integer stock) {
         this.id = id;
         this.name = name;
         this.brand = brand;
         this.productCategory = productCategory;
         this.price = price;
+        this.stock = stock;
     }
 
     public Long getId() {
@@ -61,5 +63,13 @@ public class ProductResponseDto {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 }

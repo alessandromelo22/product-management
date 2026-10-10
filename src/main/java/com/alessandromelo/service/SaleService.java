@@ -13,6 +13,7 @@ import com.alessandromelo.enums.SaleStatus;
 import com.alessandromelo.exception.customer.CustomerNotFoundException;
 import com.alessandromelo.exception.global.EntityInUseException;
 import com.alessandromelo.exception.product.ProductNotFoundException;
+import com.alessandromelo.exception.product.ProductQuantityExceedsStock;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
 import com.alessandromelo.mapper.SaleMapper;
 import com.alessandromelo.mapper.SaleProductMapper;
@@ -144,6 +145,11 @@ public class SaleService {
                     () -> new ProductNotFoundException(requestDto.getSaleProductResumeRequestDtos().get(finalI).getProductId())
             );
 
+            //Verifica se a 'quantity' do produto na Sale é compativel com o estoque:
+            if (requestDto.getSaleProductResumeRequestDtos().get(i).getQuantity() > product.getStock()){
+                throw new ProductQuantityExceedsStock(product.getName(), product.getStock());
+            }
+
             //SaleProduct:
             SaleProduct saleProduct = this.saleProductMapper.toEntity(requestDto.getSaleProductResumeRequestDtos().get(i));
 
@@ -172,7 +178,7 @@ public class SaleService {
         return this.saleMapper.toResponse(this.saleRepository.save(sale));
     }
 
-//PATCH:
+//PATCH (testar tanto o endpoint quanto o problema de N+1):
     @Transactional
     public void cancelSale(Long saleId){
 
@@ -180,6 +186,14 @@ public class SaleService {
                 () -> new SaleNotFoundException(saleId)
         );
 
+        for (int i = 0; i< sale.getSaleProducts().size(); i++){
+
+            Product product = sale.getSaleProducts().get(i).getProduct();
+            product.setStock(product.getStock() + sale.getSaleProducts().get(i).getQuantity());
+
+            this.productRepository.save(product);
+        }
+        
         sale.setStatus(SaleStatus.CANCELLED);
         this.saleRepository.save(sale);
     }

@@ -14,17 +14,20 @@ public class ProductRequestDto {
     private String brand;
     @NotNull(message = "The 'productCategory' cannot be null")
     private ProductCategory productCategory;
-    @NotNull(message = "The Product 'price' cannot be left blank")
+    @NotNull(message = "The Product 'price' cannot be null")
     private BigDecimal price;
+    @NotNull(message = "The Product 'stock' cannot be null")
+    private int stock;
 
     public ProductRequestDto() {
     }
 
-    public ProductRequestDto(String name, String brand, ProductCategory productCategory, BigDecimal price) {
+    public ProductRequestDto(String name, String brand, ProductCategory productCategory, BigDecimal price, int stock) {
         this.name = name;
         this.brand = brand;
         this.productCategory = productCategory;
         this.price = price;
+        this.stock = stock;
     }
 
     public String getName() {
@@ -57,5 +60,13 @@ public class ProductRequestDto {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
     }
 }

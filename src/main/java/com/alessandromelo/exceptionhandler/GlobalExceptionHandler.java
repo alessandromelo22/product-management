@@ -4,6 +4,7 @@ import com.alessandromelo.exception.customer.CpfAlreadyExistsException;
 import com.alessandromelo.exception.customer.CustomerNotFoundException;
 import com.alessandromelo.exception.customer.PhoneNumberAlreadyExistsException;
 import com.alessandromelo.exception.global.EntityInUseException;
+import com.alessandromelo.exception.product.InvalidStockEntryValueException;
 import com.alessandromelo.exception.product.ProductNotFoundException;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
 import com.alessandromelo.exception.user.EmailNotFoundException;
@@ -51,6 +52,13 @@ public class GlobalExceptionHandler {
 
         ApiError error = new ApiError(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(InvalidStockEntryValueException.class)
+    public ResponseEntity<ApiError> handleInvalidStockEntryValueException(InvalidStockEntryValueException exception, HttpServletRequest request){
+
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
 

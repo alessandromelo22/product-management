@@ -16,6 +16,7 @@ public class Product {
     @Enumerated(value = EnumType.STRING)
     private ProductCategory productCategory;
     private BigDecimal price; // preço de tabela
+    private int stock;
 
     @OneToMany(mappedBy = "product")
     private List<SaleProduct> saleProducts;
@@ -23,12 +24,13 @@ public class Product {
     public Product() {
     }
 
-    public Product(Long id, String name, String brand, ProductCategory productCategory, BigDecimal price, List<SaleProduct> saleProducts) {
+    public Product(Long id, String name, String brand, ProductCategory productCategory, BigDecimal price, int stock, List<SaleProduct> saleProducts) {
         this.id = id;
         this.name = name;
         this.brand = brand;
         this.productCategory = productCategory;
         this.price = price;
+        this.stock = stock;
         this.saleProducts = saleProducts;
     }
 
@@ -70,6 +72,14 @@ public class Product {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
     }
 
     public List<SaleProduct> getSaleProducts() {
