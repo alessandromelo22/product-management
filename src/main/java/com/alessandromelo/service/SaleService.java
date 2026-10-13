@@ -197,23 +197,4 @@ public class SaleService {
         sale.setStatus(SaleStatus.CANCELLED);
         this.saleRepository.save(sale);
     }
-
-//DELETE
-    @Transactional
-    public void deleteById(Long saleId){
-
-        Sale sale = this.saleRepository.findById(saleId).orElseThrow(
-                () -> new SaleNotFoundException(saleId)
-        );
-
-        // Procuro dentro da tabela que a entidade Sale se relaciona (no caso a SaleProduct) se possui algum registro que
-        // esta ligado a entidade que eu estou tentando deletar
-        boolean hasSaleProducts = this.saleProductRepository.existsBySaleId(saleId);
-
-        if (hasSaleProducts){
-            throw new EntityInUseException(Sale.class, saleId);
-        }
-
-        this.saleRepository.delete(sale);
-    }
 }

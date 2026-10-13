@@ -86,40 +86,28 @@ public class SaleController {
             summary = "Update a sale date",
             description = "Updates a sale already registered in the database.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "sale date successfully updated."),
+            @ApiResponse(responseCode = "200", description = "Sale date successfully updated."),
             @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
             @ApiResponse(responseCode = "400", description = "Invalid input data."),
             @ApiResponse(responseCode = "404", description = "Sale not found."),
     })
-    @PatchMapping("/{saleId}")
+    @PatchMapping("/{saleId}/sale-date")
     public ResponseEntity<SaleResponseDto> updateSaleDate(@PathVariable Long saleId, @Valid @RequestBody SalePatchDateRequestDto requestDto){
         return ResponseEntity.status(HttpStatus.OK).body(this.saleService.updateSaleDate(saleId, requestDto));
     }
 
 //PATCH
-
-
-    @PatchMapping("/{saleId}/cancel-sale")
+    @Operation(
+            summary = "Cancel a sale",
+            description = "Changes the sale status to canceled")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sale successfully canceled."),
+            @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
+            @ApiResponse(responseCode = "404", description = "Sale not found."),
+    })
+    @PatchMapping("/{saleId}/cancel")
     public ResponseEntity<Void> cancelSale(@PathVariable Long saleId){
         this.saleService.cancelSale(saleId);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
-
-
-//DELETE
-    @Operation(
-            summary = "Delete a sale by ID",
-            description = "Delete a sale already registered in the database.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sale successfully updated."),
-            @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
-            @ApiResponse(responseCode = "404", description = "Sale not found."),
-            @ApiResponse(responseCode = "409", description = "Deletion not performed - Sale is linked to another entity.")
-    })
-    @DeleteMapping("/{saleId}")
-    public ResponseEntity<Void> deleteById(@PathVariable Long saleId){
-        this.saleService.deleteById(saleId);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
-
 }

@@ -10,8 +10,7 @@ public class SaleProductResumeRequestDto {
     private Long productId;
     @NotNull(message = "The Sale 'quantity' cannot be null")
     private Integer quantity; //quantidade de produtos
-    @NotNull(message = "The Sale 'unitPrice' cannot be null")
-    private BigDecimal unitPrice; // preço unitário
+    private BigDecimal unitPrice; // preço unitário (se nao for passado puxara o valor de 'price' em  Product)
 
     public SaleProductResumeRequestDto() {
     }
