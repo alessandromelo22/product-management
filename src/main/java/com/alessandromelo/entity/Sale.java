@@ -14,14 +14,14 @@ public class Sale {
     private Long id;
     @Enumerated(value = EnumType.STRING)
     private SaleStatus status;
-    private BigDecimal totalAmount;
+    private BigDecimal totalAmount; //valor total da compra
     private Integer installments; // número de parcelas (1 = à vista)
     private BigDecimal installmentAmount; // valor de cada parcela
     private LocalDateTime saleDate;
 
     @ManyToOne
     private Customer customer; //(FK)
-    @OneToMany(mappedBy = "sale")
+    @OneToMany(mappedBy = "sale", fetch = FetchType.LAZY)
     private List<SaleProduct> saleProducts;
 
 

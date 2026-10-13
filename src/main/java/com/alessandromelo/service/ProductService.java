@@ -1,9 +1,11 @@
 package com.alessandromelo.service;
 
+import com.alessandromelo.dto.product.ProductEntryToStockRequestDto;
 import com.alessandromelo.dto.product.ProductRequestDto;
 import com.alessandromelo.dto.product.ProductResponseDto;
 import com.alessandromelo.entity.Product;
 import com.alessandromelo.exception.global.EntityInUseException;
+import com.alessandromelo.exception.product.InvalidStockEntryValueException;
 import com.alessandromelo.exception.product.ProductNotFoundException;
 import com.alessandromelo.mapper.ProductMapper;
 import com.alessandromelo.repository.ProductRepository;
@@ -65,6 +67,24 @@ public class ProductService {
             return this.productMapper.toResponseDto(this.productRepository.save(product1));
 
         }).orElseThrow(() -> new ProductNotFoundException(productId));
+    }
+
+//PATCH:
+    @Transactional
+    public ProductResponseDto addEntryToStock(Long productId, ProductEntryToStockRequestDto requestDto){
+
+        return this.productRepository.findById(productId).map(
+                product -> {
+
+                    if (requestDto.getInputQuantity() <= 0){
+                        throw new InvalidStockEntryValueException();
+                    }
+
+                    product.setStock(product.getStock() + requestDto.getInputQuantity());
+
+                    return this.productMapper.toResponseDto(this.productRepository.save(product));
+                }
+        ).orElseThrow(() -> new ProductNotFoundException(productId));
     }
 
 //DELETE

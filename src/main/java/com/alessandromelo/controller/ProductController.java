@@ -1,5 +1,6 @@
 package com.alessandromelo.controller;
 
+import com.alessandromelo.dto.product.ProductEntryToStockRequestDto;
 import com.alessandromelo.dto.product.ProductRequestDto;
 import com.alessandromelo.dto.product.ProductResponseDto;
 import com.alessandromelo.service.ProductService;
@@ -78,6 +79,20 @@ public class ProductController {
     @PutMapping("/{productId}")
     public ResponseEntity<ProductResponseDto> update(@PathVariable Long productId, @RequestBody @Valid ProductRequestDto requestDto){
         return ResponseEntity.status(HttpStatus.OK).body(this.productService.update(productId, requestDto));
+    }
+
+//PATCH:
+    @Operation(
+            summary = "Update a product stock",
+            description = "Adds product entries to stoke")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Product stoke successfully updated."),
+            @ApiResponse(responseCode = "400", description = "Invalid ID provided."),
+            @ApiResponse(responseCode = "400", description = "Invalid input data."),
+    })
+    @PatchMapping("/{productId}/stock")
+    public ResponseEntity<ProductResponseDto> addEntryToStock(@PathVariable Long productId, @Valid @RequestBody ProductEntryToStockRequestDto requestDto){
+        return ResponseEntity.status(HttpStatus.OK).body(this.productService.addEntryToStock(productId, requestDto));
     }
 
 //DELETE
