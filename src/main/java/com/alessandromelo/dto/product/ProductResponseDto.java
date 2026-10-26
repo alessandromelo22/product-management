@@ -11,12 +11,12 @@ public class ProductResponseDto {
     private String brand;
     private ProductCategory productCategory;
     private BigDecimal price;
-    private Integer stock;
+    private int stock;
 
     public ProductResponseDto() {
     }
 
-    public ProductResponseDto(Long id, String name, String brand, ProductCategory productCategory, BigDecimal price, Integer stock) {
+    public ProductResponseDto(Long id, String name, String brand, ProductCategory productCategory, BigDecimal price, int stock) {
         this.id = id;
         this.name = name;
         this.brand = brand;
@@ -65,11 +65,11 @@ public class ProductResponseDto {
         this.price = price;
     }
 
-    public Integer getStock() {
+    public int getStock() {
         return stock;
     }
 
-    public void setStock(Integer stock) {
+    public void setStock(int stock) {
         this.stock = stock;
     }
 }

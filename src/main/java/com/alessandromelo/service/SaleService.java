@@ -11,7 +11,6 @@ import com.alessandromelo.entity.Sale;
 import com.alessandromelo.entity.SaleProduct;
 import com.alessandromelo.enums.SaleStatus;
 import com.alessandromelo.exception.customer.CustomerNotFoundException;
-import com.alessandromelo.exception.global.EntityInUseException;
 import com.alessandromelo.exception.product.ProductNotFoundException;
 import com.alessandromelo.exception.product.ProductQuantityExceedsStock;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
@@ -25,6 +24,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ public class SaleService {
 //Calcular 'totalAmount'
     private BigDecimal calculatesTheTotalAmount(List<SaleProductResumeRequestDto> saleProductResumeRequestDtos){
 
-        BigDecimal totalAmount = null;
+        BigDecimal totalAmount = BigDecimal.ZERO;//verificar se essa forma de inicializar ele esta certa
 
         for (SaleProductResumeRequestDto saleProductResumeRequestDto : saleProductResumeRequestDtos) {
             // se 'unitPrice' nao for informado sera settado com o valor de Product.price
@@ -73,7 +73,7 @@ public class SaleService {
 
 //Calcula 'installmentAmount' de acordo com a quantidade de 'installments':
     private BigDecimal calculatesTheInstallmentAmount(BigDecimal totalAmount, Integer installments){
-        return totalAmount.divide(BigDecimal.valueOf(installments));
+        return totalAmount.divide(BigDecimal.valueOf(installments), 2, RoundingMode.HALF_EVEN); //"Banker's rounding" (Arredondamento do Banqueiro)
     }
 
 
@@ -106,6 +106,10 @@ public class SaleService {
 
         return sales.stream().map(this.saleMapper::toResponse).toList();
     }
+
+
+    //Concertar os calculos de 'totalAmount' e 'installments'
+    //Usar RoundingMode para ajudar nos arredondamentos
 
 //POST
     @Transactional

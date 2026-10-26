@@ -7,12 +7,15 @@ import com.alessandromelo.entity.Product;
 import com.alessandromelo.exception.global.EntityInUseException;
 import com.alessandromelo.exception.product.InvalidStockEntryValueException;
 import com.alessandromelo.exception.product.ProductNotFoundException;
+import com.alessandromelo.exception.product.ProductPriceInvalidException;
+import com.alessandromelo.exception.product.ProductStockInvalidException;
 import com.alessandromelo.mapper.ProductMapper;
 import com.alessandromelo.repository.ProductRepository;
 import com.alessandromelo.repository.SaleProductRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -49,6 +52,12 @@ public class ProductService {
     @Transactional
     public ProductResponseDto create(ProductRequestDto requestDto){
 
+        if (requestDto.getPrice().compareTo(BigDecimal.ZERO) <= 0){
+            throw new ProductPriceInvalidException();
+        }
+        if (requestDto.getStock() < 0){
+            throw new ProductStockInvalidException();
+        }
         Product product = this.productMapper.toEntity(requestDto);
 
         return this.productMapper.toResponseDto(this.productRepository.save(product));
@@ -58,13 +67,22 @@ public class ProductService {
     @Transactional
     public ProductResponseDto update(Long productId, ProductRequestDto requestDto){
 
-        return this.productRepository.findById(productId).map(product1 -> {
-            product1.setName(requestDto.getName());
-            product1.setBrand(requestDto.getBrand());
-            product1.setProductCategory(requestDto.getProductCategory());
-            product1.setPrice(requestDto.getPrice());
+        return this.productRepository.findById(productId).map(product -> {
 
-            return this.productMapper.toResponseDto(this.productRepository.save(product1));
+            if (requestDto.getPrice().compareTo(BigDecimal.ZERO) <= 0){
+                throw new ProductPriceInvalidException();
+            }
+            if (requestDto.getStock() < 0){
+                throw new ProductStockInvalidException();
+            }
+
+            product.setName(requestDto.getName());
+            product.setBrand(requestDto.getBrand());
+            product.setProductCategory(requestDto.getProductCategory());
+            product.setPrice(requestDto.getPrice());
+            product.setStock(requestDto.getStock());
+
+            return this.productMapper.toResponseDto(this.productRepository.save(product));
 
         }).orElseThrow(() -> new ProductNotFoundException(productId));
     }
