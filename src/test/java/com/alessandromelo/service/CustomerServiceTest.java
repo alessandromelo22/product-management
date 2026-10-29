@@ -177,7 +177,7 @@ class CustomerServiceTest {
     @DisplayName("create() should return a CustomerResponseDto")
     void createShouldReturnACustomerResponseDto() {
         //Arrange:
-        CustomerRequestDto requestDto = new CustomerRequestDtoBuilder().build();
+        CustomerRequestDto requestDto = Mockito.mock(CustomerRequestDto.class);
         Customer customer = new CustomerBuilder().build();
         CustomerResponseDto responseDTO = new CustomerResponseDtoBuilder().build();
 
@@ -193,7 +193,7 @@ class CustomerServiceTest {
         //Assert:
         Assertions.assertNotNull(returned);
 
-        verify(this.customerRepository).save(this.customerCaptor.capture());
+        verify(this.customerRepository, times(1)).save(this.customerCaptor.capture());
         Customer captured = this.customerCaptor.getValue();
         Assertions.assertAll(
                 () -> Assertions.assertEquals("João da Silva", captured.getName()),
@@ -206,7 +206,6 @@ class CustomerServiceTest {
                 () -> Assertions.assertEquals("João da Silva", returned.getName()),
                 () -> Assertions.assertEquals("37123456789", returned.getPhoneNumber())
         );
-        verify(this.customerRepository, times(1)).save(customer);
     }
 
 
