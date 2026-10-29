@@ -9,10 +9,7 @@ import com.alessandromelo.dto.product.ProductResponseDto;
 import com.alessandromelo.entity.Product;
 import com.alessandromelo.enums.ProductCategory;
 import com.alessandromelo.exception.global.EntityInUseException;
-import com.alessandromelo.exception.product.InvalidStockEntryValueException;
-import com.alessandromelo.exception.product.ProductNotFoundException;
-import com.alessandromelo.exception.product.ProductPriceInvalidException;
-import com.alessandromelo.exception.product.ProductStockInvalidException;
+import com.alessandromelo.exception.product.*;
 import com.alessandromelo.mapper.ProductMapper;
 import com.alessandromelo.repository.ProductRepository;
 import com.alessandromelo.repository.SaleProductRepository;
@@ -56,24 +53,32 @@ class ProductServiceTest {
     @Test
     void getAll_happyPath_returnAListOfProductResponseDto (){
         //Arrange:
-        Product product = Mockito.mock(Product.class);
-        ProductResponseDto responseDto = new ProductResponseDtoBuilder().build();
-        Mockito.when(this.productRepository.findAll()).thenReturn(List.of(product));
-        Mockito.when(this.productMapper.toResponseDto(product)).thenReturn(responseDto);
+        Product searchedProduct1 = new ProductBuilder().build();
+        Product searchedProduct2 = new ProductBuilder()
+                .withId(2L)
+                .withName("Perfume")
+                .withBrand("Oui")
+                .withProductCategory(ProductCategory.FRAGRANCE)
+                .withPrice(new BigDecimal("150.00"))
+                .withStock(12).build();
+        ProductResponseDto responseDto1 = new ProductResponseDtoBuilder().build();
+        ProductResponseDto responseDto2 = new ProductResponseDtoBuilder().withId(2L)
+                .withName("Perfume")
+                .withBrand("Oui")
+                .withProductCategory(ProductCategory.FRAGRANCE)
+                .withPrice(new BigDecimal("150.00"))
+                .withStock(12).build();
+        Mockito.when(this.productRepository.findAll()).thenReturn(List.of(searchedProduct1, searchedProduct2));
+        Mockito.when(this.productMapper.toResponseDto(searchedProduct1)).thenReturn(responseDto1);
+        Mockito.when(this.productMapper.toResponseDto(searchedProduct2)).thenReturn(responseDto2);
 
         //Act:
         List<ProductResponseDto> returned = this.productService.getAll();
 
         //Assert:
-        Assertions.assertNotNull(returned);
-        Assertions.assertAll(
-                () -> Assertions.assertEquals(1L, returned.get(0).getId()),
-                () -> Assertions.assertEquals("Creme", returned.get(0).getName()),
-                () -> Assertions.assertEquals("Oboticário", returned.get(0).getBrand()),
-                () -> Assertions.assertEquals(ProductCategory.CREAM, returned.get(0).getProductCategory()),
-                () -> Assertions.assertEquals("50.00", returned.get(0).getPrice().toEngineeringString()),
-                () -> Assertions.assertEquals(10, returned.get(0).getStock())
-        );
+        Assertions.assertEquals(2, returned.size());
+        Assertions.assertSame(responseDto1, returned.get(0));
+        Assertions.assertSame(responseDto2, returned.get(1));
     }
 
 //getById():
@@ -93,29 +98,20 @@ class ProductServiceTest {
     @Test
     void getById_happyPath_returnAProductResponseDto(){
         //Arrange:
-        Product product = Mockito.mock(Product.class);
+        Product searchedProduct = new ProductBuilder().build();
         ProductResponseDto responseDto = new ProductResponseDtoBuilder().build();
 
-        Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(product));
-        Mockito.when(this.productMapper.toResponseDto(product)).thenReturn(responseDto);
+        Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
+        Mockito.when(this.productMapper.toResponseDto(searchedProduct)).thenReturn(responseDto);
 
         //Act:
         ProductResponseDto returned = this.productService.getById(1L);
 
         //Assert:
-        Assertions.assertNotNull(returned);
-        Assertions.assertAll(
-                () -> Assertions.assertEquals(1L, returned.getId()),
-                () -> Assertions.assertEquals("Creme", returned.getName()),
-                () -> Assertions.assertEquals("Oboticário", returned.getBrand()),
-                () -> Assertions.assertEquals(ProductCategory.CREAM, returned.getProductCategory()),
-                () -> Assertions.assertEquals("50.00", returned.getPrice().toEngineeringString()),
-                () -> Assertions.assertEquals(10, returned.getStock())
-        );
-        Mockito.verify(this.productMapper).toResponseDto(product);
+        Assertions.assertSame(responseDto, returned);
     }
 
-//POST:
+//create():
     @Test
     void create_happyPath_saveProductAndReturnSuccessfully(){
         //Arrange:
@@ -153,7 +149,7 @@ class ProductServiceTest {
     //Deve lançar a exceção de preço invalido quando receber o valor limite invalido (0)
     // price deve ser > 0 , entao o valor limite invalido é 0
     @Test
-    void create_invalidLimitPrice_throwsAndDoesNotSave(){
+    void create_priceZero_throwsAndDoesNotSave(){
         //Arrange:
         ProductRequestDto requestDto = new ProductRequestDtoBuilder().withPrice(new BigDecimal(0)).build(); //valor limite de 'price' invalido (0)
 
@@ -183,7 +179,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void create_invalidLimitStock_throwsAndDoesNotSave (){
+    void create_negativeStock_throwsAndDoesNotSave (){
         //Arrange:
         ProductRequestDto requestDto = new ProductRequestDtoBuilder().withStock(-1).build(); //valor limite de 'stock' inválido (-1)
 
@@ -196,7 +192,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void create_validLimitStock_saveAProductSuccessfully (){
+    void create_stockZero_saveAProductSuccessfully (){
         //Arrange:
         ProductRequestDto requestDto = new ProductRequestDtoBuilder().withStock(0).build(); //valor limite de 'stock' válido(0)
         Product mapped = new ProductBuilder().withId(null).build();
@@ -244,7 +240,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void update_invalidLimitPrice_throwsAndDoesNotUpdate (){
+    void update_priceZero_throwsAndDoesNotUpdate (){
         //Arrange:
         ProductRequestDto requestDto = new ProductRequestDtoBuilder().withPrice(new BigDecimal(0)).build(); //price limite inválido
         Product searchedProduct = new ProductBuilder().build();
@@ -262,14 +258,10 @@ class ProductServiceTest {
     @Test
     void update_validLimitPrice_saveSuccessfully (){
         //Arrange:
-        ProductRequestDto requestDto = new ProductRequestDtoBuilder().withPrice(new BigDecimal("0.01")).build(); //price limite inválido
+        ProductRequestDto requestDto = new ProductRequestDtoBuilder().withPrice(new BigDecimal("0.01")).build(); //price limite válido
         Product searchedProduct = new ProductBuilder().build();
-        Product saved = new ProductBuilder().build();
-        ProductResponseDto responseDto = new ProductResponseDtoBuilder().build();
 
         Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
-        Mockito.when(this.productRepository.save(searchedProduct)).thenReturn(saved);
-        Mockito.when(this.productMapper.toResponseDto(saved)).thenReturn(responseDto);
 
         //Act:
         this.productService.update(1L, requestDto);
@@ -279,7 +271,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void update_invalidLimitStock_throwsAndDoesNotUpdate (){
+    void update_negativeStock_throwsAndDoesNotUpdate (){
         //Arrange:
         ProductRequestDto requestDto = new ProductRequestDtoBuilder().withStock(-1).build(); //stock limite inválido
         Product searchedProduct = new ProductBuilder().build();
@@ -295,16 +287,12 @@ class ProductServiceTest {
     }
 
     @Test
-    void update_validLimitStock_saveSuccessfully (){
+    void update_stockZero_saveSuccessfully (){
         //Arrange:
         ProductRequestDto requestDto = new ProductRequestDtoBuilder().withStock(0).build(); //stock limite válido
         Product searchedProduct = new ProductBuilder().build();
-        Product saved = new ProductBuilder().build();
-        ProductResponseDto responseDto = new ProductResponseDtoBuilder().build();
 
         Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
-        Mockito.when(this.productRepository.save(searchedProduct)).thenReturn(saved);
-        Mockito.when(this.productMapper.toResponseDto(saved)).thenReturn(responseDto);
 
         //Act:
         this.productService.update(1L, requestDto);
@@ -371,6 +359,8 @@ class ProductServiceTest {
         Assertions.assertSame(responseDto, returned);
     }
 
+
+
 //addEntryToStock:
     @Test
     void addEntryToStock_productIdInvalid_throwsAndNotSave(){
@@ -388,7 +378,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void addEntryToStock_invalidLimitStock_throwsAndNotSave(){
+    void addEntryToStock_inputQuantityZero_throwsAndNotSave(){
         //Arrange:
         ProductEntryToStockRequestDto requestDto = new ProductEntryToStockRequestDto(0); //stock limite invalido '0'
         Product searchedProduct = new ProductBuilder().build();
@@ -404,16 +394,12 @@ class ProductServiceTest {
     }
 
     @Test
-    void addEntryToStock_validLimitStock_saveSuccessfully (){
+    void addEntryToStock_validLimitInputQuantity_saveSuccessfully (){
         //Arrange:
         ProductEntryToStockRequestDto requestDto = new ProductEntryToStockRequestDto(1); //stock limite válido
         Product searchedProduct = new ProductBuilder().build();
-        Product saved = new ProductBuilder().build();
-        ProductResponseDto responseDto = new ProductResponseDtoBuilder().build();
 
         Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
-        Mockito.when(this.productRepository.save(searchedProduct)).thenReturn(saved);
-        Mockito.when(this.productMapper.toResponseDto(saved)).thenReturn(responseDto);
 
         //Act:
         this.productService.addEntryToStock(1L, requestDto);
@@ -441,9 +427,7 @@ class ProductServiceTest {
         Mockito.verify(this.productRepository).save(this.productCaptor.capture());
 
         Product captured = this.productCaptor.getValue();
-        Assertions.assertAll(
-                () -> Assertions.assertEquals(15, captured.getStock())
-        );
+       Assertions.assertEquals(15, captured.getStock());
     }
 
     @Test
@@ -466,8 +450,39 @@ class ProductServiceTest {
         Assertions.assertSame(responseDto, returned);
     }
 
-//deleteById:
+    @Test
+    void addEntryToStock_maximumInputQuantityAccepted_saveSuccessfully (){
+        //Arrange:
+        ProductEntryToStockRequestDto requestDto = new ProductEntryToStockRequestDto(50); //stock entry value maximum accepted
+        Product searchedProduct = new ProductBuilder().withStock(5).build();
 
+        Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
+
+        //Act:
+        this.productService.addEntryToStock(1L, requestDto);
+
+        //Assert:
+        Mockito.verify(this.productRepository).save(searchedProduct);
+    }
+
+    @Test
+    void addEntryToStock_inputQuantityMaximumAcceptedPlusOne_throwsAndNotSave (){
+        //Arrange:
+        ProductEntryToStockRequestDto requestDto = new ProductEntryToStockRequestDto(51); //stock entry value not accepted
+        Product searchedProduct = new ProductBuilder().build();
+
+        Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
+
+        //Act:
+        Assertions.assertThrows(StockEntryLimitExceededException.class,
+                () -> this.productService.addEntryToStock(1L, requestDto));
+
+        //Assert:
+        Mockito.verify(this.productRepository, Mockito.never()).save(Mockito.any());
+    }
+
+
+//deleteById:
     @Test
     void deleteById_productIdInvalid_throwsAndNotDelete (){
         //Arrange
@@ -484,7 +499,7 @@ class ProductServiceTest {
     @Test
     void deleteById_productRelatedToASaleProduct_throwsAndNotDelete (){
         //Arrange
-        Product searchedProduct = Mockito.mock(Product.class);
+        Product searchedProduct = new ProductBuilder().build();
 
         Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
         Mockito.when(this.saleProductRepository.existsByProductId(1L)).thenReturn(true);

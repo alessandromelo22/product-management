@@ -5,10 +5,7 @@ import com.alessandromelo.dto.product.ProductRequestDto;
 import com.alessandromelo.dto.product.ProductResponseDto;
 import com.alessandromelo.entity.Product;
 import com.alessandromelo.exception.global.EntityInUseException;
-import com.alessandromelo.exception.product.InvalidStockEntryValueException;
-import com.alessandromelo.exception.product.ProductNotFoundException;
-import com.alessandromelo.exception.product.ProductPriceInvalidException;
-import com.alessandromelo.exception.product.ProductStockInvalidException;
+import com.alessandromelo.exception.product.*;
 import com.alessandromelo.mapper.ProductMapper;
 import com.alessandromelo.repository.ProductRepository;
 import com.alessandromelo.repository.SaleProductRepository;
@@ -25,6 +22,7 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final SaleProductRepository saleProductRepository;
 
+    private static final int MAX_ENTRY_QUANTITY = 50;
 
     public ProductService(ProductRepository productRepository, ProductMapper productMapper, SaleProductRepository saleProductRepository) {
         this.productRepository = productRepository;
@@ -67,42 +65,40 @@ public class ProductService {
     @Transactional
     public ProductResponseDto update(Long productId, ProductRequestDto requestDto){
 
-        return this.productRepository.findById(productId).map(product -> {
+        Product product = this.productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 
-            if (requestDto.getPrice().compareTo(BigDecimal.ZERO) <= 0){
-                throw new ProductPriceInvalidException();
-            }
-            if (requestDto.getStock() < 0){
-                throw new ProductStockInvalidException();
-            }
+        if (requestDto.getPrice().compareTo(BigDecimal.ZERO) <= 0){
+            throw new ProductPriceInvalidException();
+        }
+        if (requestDto.getStock() < 0){
+            throw new ProductStockInvalidException();
+        }
 
-            product.setName(requestDto.getName());
-            product.setBrand(requestDto.getBrand());
-            product.setProductCategory(requestDto.getProductCategory());
-            product.setPrice(requestDto.getPrice());
-            product.setStock(requestDto.getStock());
+        product.setName(requestDto.getName());
+        product.setBrand(requestDto.getBrand());
+        product.setProductCategory(requestDto.getProductCategory());
+        product.setPrice(requestDto.getPrice());
+        product.setStock(requestDto.getStock());
 
-            return this.productMapper.toResponseDto(this.productRepository.save(product));
-
-        }).orElseThrow(() -> new ProductNotFoundException(productId));
+        return this.productMapper.toResponseDto(this.productRepository.save(product));
     }
 
 //PATCH:
     @Transactional
     public ProductResponseDto addEntryToStock(Long productId, ProductEntryToStockRequestDto requestDto){
 
-        return this.productRepository.findById(productId).map(
-                product -> {
+        Product product = this.productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 
-                    if (requestDto.getInputQuantity() <= 0){
-                        throw new InvalidStockEntryValueException();
-                    }
+        if (requestDto.getInputQuantity() <= 0){
+            throw new InvalidStockEntryValueException();
+        } else if (requestDto.getInputQuantity() > MAX_ENTRY_QUANTITY) {
+            throw new StockEntryLimitExceededException();
+        }
+        product.setStock(product.getStock() + requestDto.getInputQuantity());
 
-                    product.setStock(product.getStock() + requestDto.getInputQuantity());
-
-                    return this.productMapper.toResponseDto(this.productRepository.save(product));
-                }
-        ).orElseThrow(() -> new ProductNotFoundException(productId));
+        return this.productMapper.toResponseDto(this.productRepository.save(product));
     }
 
 //DELETE
