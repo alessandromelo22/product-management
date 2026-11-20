@@ -69,8 +69,8 @@ class ProductServiceTest {
                 .withPrice(new BigDecimal("150.00"))
                 .withStock(12).build();
         Mockito.when(this.productRepository.findAll()).thenReturn(List.of(searchedProduct1, searchedProduct2));
-        Mockito.when(this.productMapper.toResponseDto(searchedProduct1)).thenReturn(responseDto1);
-        Mockito.when(this.productMapper.toResponseDto(searchedProduct2)).thenReturn(responseDto2);
+        Mockito.when(this.productMapper.toResponse(searchedProduct1)).thenReturn(responseDto1);
+        Mockito.when(this.productMapper.toResponse(searchedProduct2)).thenReturn(responseDto2);
 
         //Act:
         List<ProductResponseDto> returned = this.productService.getAll();
@@ -92,7 +92,7 @@ class ProductServiceTest {
         Assertions.assertThrows(ProductNotFoundException.class,
                 () -> this.productService.getById(999L));
 
-        Mockito.verify(this.productMapper, Mockito.never()).toResponseDto(Mockito.any());
+        Mockito.verify(this.productMapper, Mockito.never()).toResponse(Mockito.any());
     }
 
     @Test
@@ -102,7 +102,7 @@ class ProductServiceTest {
         ProductResponseDto responseDto = new ProductResponseDtoBuilder().build();
 
         Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
-        Mockito.when(this.productMapper.toResponseDto(searchedProduct)).thenReturn(responseDto);
+        Mockito.when(this.productMapper.toResponse(searchedProduct)).thenReturn(responseDto);
 
         //Act:
         ProductResponseDto returned = this.productService.getById(1L);
@@ -122,7 +122,7 @@ class ProductServiceTest {
 
         Mockito.when(this.productMapper.toEntity(requestDto)).thenReturn(mapped);
         Mockito.when(this.productRepository.save(mapped)).thenReturn(saved);
-        Mockito.when(this.productMapper.toResponseDto(saved)).thenReturn(responseDto);
+        Mockito.when(this.productMapper.toResponse(saved)).thenReturn(responseDto);
 
         //Act:
         ProductResponseDto returned = this.productService.create(requestDto);
@@ -316,7 +316,7 @@ class ProductServiceTest {
 
         Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
         Mockito.when(this.productRepository.save(searchedProduct)).thenReturn(saved);
-        Mockito.when(this.productMapper.toResponseDto(saved)).thenReturn(responseDto);
+        Mockito.when(this.productMapper.toResponse(saved)).thenReturn(responseDto);
 
         //Act:
         this.productService.update(1L, requestDto);
@@ -349,7 +349,7 @@ class ProductServiceTest {
 
         Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
         Mockito.when(this.productRepository.save(searchedProduct)).thenReturn(saved);
-        Mockito.when(this.productMapper.toResponseDto(saved)).thenReturn(responseDto);
+        Mockito.when(this.productMapper.toResponse(saved)).thenReturn(responseDto);
 
         //Act:
         ProductResponseDto returned = this.productService.update(1L, requestDto);
@@ -418,7 +418,7 @@ class ProductServiceTest {
 
         Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
         Mockito.when(this.productRepository.save(searchedProduct)).thenReturn(saved);
-        Mockito.when(this.productMapper.toResponseDto(saved)).thenReturn(responseDto);
+        Mockito.when(this.productMapper.toResponse(saved)).thenReturn(responseDto);
 
         //Act:
         this.productService.addEntryToStock(1L, requestDto);
@@ -440,7 +440,7 @@ class ProductServiceTest {
 
         Mockito.when(this.productRepository.findById(1L)).thenReturn(Optional.of(searchedProduct));
         Mockito.when(this.productRepository.save(searchedProduct)).thenReturn(saved);
-        Mockito.when(this.productMapper.toResponseDto(saved)).thenReturn(responseDto);
+        Mockito.when(this.productMapper.toResponse(saved)).thenReturn(responseDto);
 
         //Act:
         ProductResponseDto returned = this.productService.addEntryToStock(1L, requestDto);

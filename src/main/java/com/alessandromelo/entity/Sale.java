@@ -14,8 +14,11 @@ public class Sale {
     private Long id;
     @Enumerated(value = EnumType.STRING)
     private SaleStatus status;
-    private BigDecimal totalAmount; //valor total da compra
+    @Column(nullable = false)
+    private BigDecimal totalAmount;//valor total da compra
+    @Column(nullable = false)
     private Integer installments; // número de parcelas (1 = à vista)
+    @Column(nullable = false)
     private BigDecimal installmentAmount; // valor de cada parcela
     private LocalDateTime saleDate;
 
