@@ -16,6 +16,7 @@ import com.alessandromelo.exception.product.ProductQuantityExceedsStock;
 import com.alessandromelo.exception.sale.InstallmentNotValidException;
 import com.alessandromelo.exception.sale.SaleAlreadyCanceledException;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
+import com.alessandromelo.exception.saleproduct.QuantityNotValidException;
 import com.alessandromelo.mapper.SaleMapper;
 import com.alessandromelo.mapper.SaleProductMapper;
 import com.alessandromelo.repository.CustomerRepository;
@@ -63,6 +64,11 @@ public class SaleService {
         BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (SaleProductResumeRequestDto saleProductResumeRequestDto : saleProductResumeRequestDtos) {
+
+            if (saleProductResumeRequestDto.getQuantity() <= 0){
+                throw new QuantityNotValidException();
+            }
+
             // se 'unitPrice' for null ou for <= 0 sera settado com o valor de `Product.price`
             if(saleProductResumeRequestDto.getUnitPrice() == null || saleProductResumeRequestDto.getUnitPrice().compareTo(BigDecimal.ZERO) <= 0){
 
@@ -159,6 +165,7 @@ public class SaleService {
                 throw new ProductQuantityExceedsStock(product.getName(), product.getStock());
             } else {
                 product.setStock(product.getStock() - requestDto.getSaleProductResumeRequestDtos().get(i).getQuantity()); //da baixa no 'stock' do Product
+                this.productRepository.save(product);
             }
 
             //SaleProduct:

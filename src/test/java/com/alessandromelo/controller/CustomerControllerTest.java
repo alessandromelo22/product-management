@@ -77,7 +77,6 @@ class CustomerControllerTest {
         this.mockMvc.perform(get("/customers/{customerId}", customer.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("João"));
-
     }
 
     @Test
@@ -90,7 +89,7 @@ class CustomerControllerTest {
 
 //create:
     @Test
-    void createShouldReturnStatus201Sucessfully() throws Exception {
+    void createShouldReturnStatus201Successfully() throws Exception {
         //Arrange:
         CustomerRequestDto requestDto = new CustomerRequestDto("Maria", "34988760098", "976.566.435-67");
 

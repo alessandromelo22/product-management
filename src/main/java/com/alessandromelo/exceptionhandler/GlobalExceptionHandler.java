@@ -9,6 +9,7 @@ import com.alessandromelo.exception.product.ProductNotFoundException;
 import com.alessandromelo.exception.sale.InstallmentNotValidException;
 import com.alessandromelo.exception.sale.SaleAlreadyCanceledException;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
+import com.alessandromelo.exception.saleproduct.QuantityNotValidException;
 import com.alessandromelo.exception.user.EmailNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -92,6 +93,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InstallmentNotValidException.class)//400
     public ResponseEntity<ApiError> handleInstallmentNotValidException (InstallmentNotValidException exception,
+                                                                        HttpServletRequest request){
+
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
+//SALEPRODUCT:
+    @ExceptionHandler(QuantityNotValidException.class)//400
+    public ResponseEntity<ApiError> handleQuantityNotValidException (QuantityNotValidException exception,
                                                                         HttpServletRequest request){
 
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI());

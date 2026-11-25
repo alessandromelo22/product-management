@@ -19,8 +19,10 @@ import com.alessandromelo.enums.SaleStatus;
 import com.alessandromelo.exception.customer.CustomerNotFoundException;
 import com.alessandromelo.exception.product.ProductNotFoundException;
 import com.alessandromelo.exception.product.ProductQuantityExceedsStock;
+import com.alessandromelo.exception.sale.InstallmentNotValidException;
 import com.alessandromelo.exception.sale.SaleAlreadyCanceledException;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
+import com.alessandromelo.exception.saleproduct.QuantityNotValidException;
 import com.alessandromelo.mapper.SaleMapper;
 import com.alessandromelo.mapper.SaleProductMapper;
 import com.alessandromelo.repository.CustomerRepository;
@@ -69,7 +71,6 @@ class SaleServiceTest {
 
 
 //getAll():
-
     @Test
     public void getAll_noSalesInTheDatabase_returnAnEmptyList (){
         //Arrange:
@@ -121,6 +122,8 @@ class SaleServiceTest {
         Assertions.assertSame(responseDto2, returned.get(1));
     }
 
+
+
 //getById:
     @Test
     void getById_saleIdDoesNotExist_throwAndDoesNotReturn(){
@@ -152,6 +155,7 @@ class SaleServiceTest {
     }
 
 
+
 //getBySaleDate:
     @Test
     public void getBySaleDate_noSalesInTheDatabase_returnAnEmptyList (){
@@ -171,7 +175,10 @@ class SaleServiceTest {
     @Test
     public void getBySaleDate_happyPath_returnAListOfSaleResponseDto (){
         //Arrange:
-        SaleDateRequestDto requestDto = new SaleDateRequestDtoBuilder().build();
+        SaleDateRequestDto requestDto = new SaleDateRequestDtoBuilder()
+                .withStart(LocalDate.of(2026, Month.NOVEMBER, 2))
+                .withEnd(LocalDate.of(2026, Month.NOVEMBER, 3))
+                .build();
         Sale searchedSale1 = new SaleBuilder()
                 .withSaleDate(LocalDateTime.of(2026, Month.NOVEMBER, 2, 10, 33)).build();
 
@@ -199,7 +206,6 @@ class SaleServiceTest {
         Assertions.assertSame(responseDto2, returned.get(1));
     }
 
-    //Ver se precisa de mais testes para esse metodo getBySaleDate()
 
 
 //create:
@@ -235,6 +241,7 @@ class SaleServiceTest {
         this.saleService.create(requestDto);
 
         //Assert:
+        Mockito.verify(this.customerRepository, Mockito.never()).findById(Mockito.any());
         Mockito.verify(this.saleRepository).save(this.saleCaptor.capture());
         Sale captured = this.saleCaptor.getValue();
 
@@ -242,7 +249,7 @@ class SaleServiceTest {
     }
 
     @Test
-    public void create_happyPath_settCustomerInSaleSuccessfully (){
+    public void create_happyPath_setCustomerInSaleSuccessfully (){
         //Arrange:
         SaleRequestDto requestDto = new SaleRequestDtoBuilder().build();
         Customer searchedCustomer = new CustomerBuilder().build();
@@ -266,8 +273,6 @@ class SaleServiceTest {
 
         Assertions.assertSame(searchedCustomer, captured.getCustomer());
     }
-
-
 
     @Test
     public void create_requestDoesNotHaveSaleDate_setSaleDateToTheCurrentDate (){
@@ -316,14 +321,14 @@ class SaleServiceTest {
         this.saleService.create(requestDto);
 
         //Assert:
-        Assertions.assertEquals(LocalDateTime.of(2026, Month.NOVEMBER, 4, 10, 23), mappedSale.getSaleDate().truncatedTo(ChronoUnit.MINUTES));
+        Assertions.assertEquals(LocalDateTime.of(2026, Month.NOVEMBER, 4, 10, 23), mappedSale.getSaleDate());
     }
 
     @Test
     public void create_happyPath_setTotalAmountSuccessfullyInTheSale (){
         //Arrange:
-        SaleProductResumeRequestDto saleProductResumeRequestDto1 = new SaleProductResumeRequestDto(1L, 4, new BigDecimal("25.00"));
-        SaleProductResumeRequestDto saleProductResumeRequestDto2 = new SaleProductResumeRequestDto(2L, 2, new BigDecimal("50.00"));
+        SaleProductResumeRequestDto saleProductResumeRequestDto1 = new SaleProductResumeRequestDto(1L, 3, new BigDecimal("25.00"));
+        SaleProductResumeRequestDto saleProductResumeRequestDto2 = new SaleProductResumeRequestDto(2L, 2, new BigDecimal("40.00"));
 
         SaleRequestDto requestDto = new SaleRequestDtoBuilder()
                 .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto1, saleProductResumeRequestDto2))
@@ -332,8 +337,8 @@ class SaleServiceTest {
         Sale mappedSale = new SaleBuilder().withTotalAmount(null).build();
         Product searchedProduct1 = new ProductBuilder().build();
         Product searchedProduct2 = new ProductBuilder().withId(2L).build();
-        SaleProduct mappedSaleProduct1 = new SaleProduct(null, 4, new BigDecimal("25.00"), null, null);
-        SaleProduct mappedSaleProduct2 = new SaleProduct(null, 2, new BigDecimal("50.00"), null, null);
+        SaleProduct mappedSaleProduct1 = new SaleProduct(null, 3, new BigDecimal("25.00"), null, null);
+        SaleProduct mappedSaleProduct2 = new SaleProduct(null, 2, new BigDecimal("40.00"), null, null);
         SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
 
         Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
@@ -348,13 +353,53 @@ class SaleServiceTest {
         this.saleService.create(requestDto);
 
         //Assert:
-        Assertions.assertEquals(new BigDecimal("200.00"), mappedSale.getTotalAmount());
+        Assertions.assertEquals(new BigDecimal("155.00"), mappedSale.getTotalAmount());
     }
 
     @Test
-    public void create_requestDoesNotHaveUnitPrice_setUnitPriceWithProductPriceAndSetTotalAmountSuccessfullyInTheSale (){
+    public void create_quantityZero_throwAndDoesNotSave (){
         //Arrange:
-        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 3, null);
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 0, new BigDecimal("50.00")); //'quantity' zero
+
+        SaleRequestDto requestDto = new SaleRequestDtoBuilder()
+                .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
+                .build();
+        Customer searchedCustomer = new CustomerBuilder().build();
+        Sale mappedSale = new SaleBuilder().withTotalAmount(null).build();
+
+        Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
+        Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
+
+        //Act:
+        //Assert:
+        Assertions.assertThrows(QuantityNotValidException.class,
+                () -> this.saleService.create(requestDto));
+    }
+
+    @Test
+    public void create_negativeQuantity_throwAndDoesNotSave (){
+        //Arrange:
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, -5, new BigDecimal("50.00")); //negative 'quantity'
+
+        SaleRequestDto requestDto = new SaleRequestDtoBuilder()
+                .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
+                .build();
+        Customer searchedCustomer = new CustomerBuilder().build();
+        Sale mappedSale = new SaleBuilder().withTotalAmount(null).build();
+
+        Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
+        Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
+
+        //Act:
+        //Assert:
+        Assertions.assertThrows(QuantityNotValidException.class,
+                () -> this.saleService.create(requestDto));
+    }
+
+    @Test
+    public void create_unitPriceWithMinimumValidValue_setTotalAmountSuccessfullyInTheSale (){
+        //Arrange:
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 3, new BigDecimal("0.01")); //'unitPrice' mínimo valido
 
         SaleRequestDto requestDto = new SaleRequestDtoBuilder()
                 .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
@@ -362,6 +407,60 @@ class SaleServiceTest {
         Customer searchedCustomer = new CustomerBuilder().build();
         Sale mappedSale = new SaleBuilder().withTotalAmount(null).build();
         Product searchedProduct = new ProductBuilder().build();
+        SaleProduct mappedSaleProduct = new SaleProduct(null, 3, new BigDecimal("0.01"), null, null); //'unitPrice' mínimo valido
+        SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
+
+        Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
+        Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
+        Mockito.when(this.productRepository.findById(requestDto.getSaleProductResumeRequestDtos().get(0).getProductId())).thenReturn(Optional.of(searchedProduct));
+        Mockito.when(this.saleProductMapper.toEntity(requestDto.getSaleProductResumeRequestDtos().get(0))).thenReturn(mappedSaleProduct);
+        Mockito.when(this.saleMapper.toResponse(mappedSale, List.of(mappedSaleProduct))).thenReturn(responseDto);
+
+        //Act:
+        this.saleService.create(requestDto);
+
+        //Assert:
+        Assertions.assertEquals(new BigDecimal("0.03"), mappedSale.getTotalAmount());
+    }
+
+    @Test
+    public void create_unitPriceWithDifferentScala_setTotalAmountSuccessfullyInTheSale (){
+        //Arrange:
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 3, new BigDecimal("50")); //'unitPrice' com escala de 0
+
+        SaleRequestDto requestDto = new SaleRequestDtoBuilder()
+                .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
+                .build();
+        Customer searchedCustomer = new CustomerBuilder().build();
+        Sale mappedSale = new SaleBuilder().withTotalAmount(null).build();
+        Product searchedProduct = new ProductBuilder().build();
+        SaleProduct mappedSaleProduct = new SaleProduct(null, 3, new BigDecimal("50"), null, null); //'unitPrice' com escala de 0
+        SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
+
+        Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
+        Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
+        Mockito.when(this.productRepository.findById(requestDto.getSaleProductResumeRequestDtos().get(0).getProductId())).thenReturn(Optional.of(searchedProduct));
+        Mockito.when(this.saleProductMapper.toEntity(requestDto.getSaleProductResumeRequestDtos().get(0))).thenReturn(mappedSaleProduct);
+        Mockito.when(this.saleMapper.toResponse(mappedSale, List.of(mappedSaleProduct))).thenReturn(responseDto);
+
+        //Act:
+        this.saleService.create(requestDto);
+
+        //Assert:
+        Assertions.assertEquals(new BigDecimal("150.00"), mappedSale.getTotalAmount()); //esperado que seja retornado um valor com escala de 2
+    }
+
+    @Test
+    public void create_unitPriceNull_setUnitPriceWithProductPriceAndSetTotalAmountSuccessfullyInTheSale (){
+        //Arrange:
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 3, null); //'unitPrice' null
+
+        SaleRequestDto requestDto = new SaleRequestDtoBuilder()
+                .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
+                .build();
+        Customer searchedCustomer = new CustomerBuilder().build();
+        Sale mappedSale = new SaleBuilder().withTotalAmount(null).build();
+        Product searchedProduct = new ProductBuilder().withPrice(new BigDecimal("50.00")).build(); // Product 'price'
         SaleProduct mappedSaleProduct = new SaleProduct(null, 3, new BigDecimal("50.00"), null, null);
         SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
 
@@ -375,22 +474,22 @@ class SaleServiceTest {
         this.saleService.create(requestDto);
 
         //Assert:
+        Assertions.assertEquals(new BigDecimal("50.00"), requestDto.getSaleProductResumeRequestDtos().get(0).getUnitPrice());
         Assertions.assertEquals(new BigDecimal("150.00"), mappedSale.getTotalAmount());
     }
 
     @Test
-    public void create_happyPath_setInstallmentAmountSuccessfullyInTheSale (){
+    public void create_unitPriceZero_setUnitPriceWithProductPriceAndSetTotalAmountSuccessfullyInTheSale (){
         //Arrange:
-        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 1, new BigDecimal("200.00"));
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 3, BigDecimal.ZERO); //'unitPrice' zero
 
         SaleRequestDto requestDto = new SaleRequestDtoBuilder()
                 .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
-                .withInstallments(5)
                 .build();
         Customer searchedCustomer = new CustomerBuilder().build();
-        Sale mappedSale = new SaleBuilder().withTotalAmount(null).withInstallments(5).withInstallmentAmount(BigDecimal.ZERO).build();
-        Product searchedProduct = new ProductBuilder().build();
-        SaleProduct mappedSaleProduct = new SaleProduct(null, 1, new BigDecimal("200.00"), null, null);
+        Sale mappedSale = new SaleBuilder().withTotalAmount(null).build();
+        Product searchedProduct = new ProductBuilder().withPrice(new BigDecimal("50.00")).build(); // Product 'price'
+        SaleProduct mappedSaleProduct = new SaleProduct(null, 3, new BigDecimal("50.00"), null, null);
         SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
 
         Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
@@ -403,7 +502,115 @@ class SaleServiceTest {
         this.saleService.create(requestDto);
 
         //Assert:
-        Assertions.assertEquals(new BigDecimal("40.00"), mappedSale.getInstallmentAmount());
+        Assertions.assertEquals(new BigDecimal("50.00"), requestDto.getSaleProductResumeRequestDtos().get(0).getUnitPrice());
+        Assertions.assertEquals(new BigDecimal("150.00"), mappedSale.getTotalAmount());
+    }
+
+    @Test
+    public void create_unitPriceNegative_setUnitPriceWithProductPriceAndSetTotalAmountSuccessfullyInTheSale (){
+        //Arrange:
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 3, new BigDecimal("-200.00")); //'unitPrice' negativo
+
+        SaleRequestDto requestDto = new SaleRequestDtoBuilder()
+                .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
+                .build();
+        Customer searchedCustomer = new CustomerBuilder().build();
+        Sale mappedSale = new SaleBuilder().withTotalAmount(null).build();
+        Product searchedProduct = new ProductBuilder().withPrice(new BigDecimal("50.00")).build(); // Product 'price'
+        SaleProduct mappedSaleProduct = new SaleProduct(null, 3, new BigDecimal("50.00"), null, null);
+        SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
+
+        Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
+        Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
+        Mockito.when(this.productRepository.findById(requestDto.getSaleProductResumeRequestDtos().get(0).getProductId())).thenReturn(Optional.of(searchedProduct));
+        Mockito.when(this.saleProductMapper.toEntity(requestDto.getSaleProductResumeRequestDtos().get(0))).thenReturn(mappedSaleProduct);
+        Mockito.when(this.saleMapper.toResponse(mappedSale, List.of(mappedSaleProduct))).thenReturn(responseDto);
+
+        //Act:
+        this.saleService.create(requestDto);
+
+        //Assert:
+        Assertions.assertEquals(new BigDecimal("50.00"), requestDto.getSaleProductResumeRequestDtos().get(0).getUnitPrice());
+        Assertions.assertEquals(new BigDecimal("150.00"), mappedSale.getTotalAmount());
+    }
+
+    @Test
+    public void create_installmentZero_throwAndNotSave (){
+        //Arrange:
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 1, new BigDecimal("200.00"));
+
+        SaleRequestDto requestDto = new SaleRequestDtoBuilder()
+                .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
+                .withInstallments(0) //'installments' zero
+                .build();
+        Customer searchedCustomer = new CustomerBuilder().build();
+        Sale mappedSale = new SaleBuilder().withTotalAmount(null).withInstallments(0) //'installments' zero
+                .withInstallmentAmount(BigDecimal.ZERO).build();
+
+        Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
+        Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
+
+        //Act:
+        //Assert:
+        Assertions.assertThrows(InstallmentNotValidException.class,
+                () -> this.saleService.create(requestDto));
+
+        Mockito.verify(this.saleRepository, Mockito.never()).save(Mockito.any());
+        Mockito.verify(this.saleProductRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    @Test
+    public void create_installmentNegative_throwAndNotSave (){
+        //Arrange:
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 1, new BigDecimal("200.00"));
+
+        SaleRequestDto requestDto = new SaleRequestDtoBuilder()
+                .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
+                .withInstallments(-1) //'installments' negativo
+                .build();
+        Customer searchedCustomer = new CustomerBuilder().build();
+        Sale mappedSale = new SaleBuilder().withTotalAmount(null).withInstallments(-1) //'installments' negativo
+                .withInstallmentAmount(BigDecimal.ZERO).build();
+
+        Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
+        Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
+
+        //Act:
+        //Assert:
+        Assertions.assertThrows(InstallmentNotValidException.class,
+                () -> this.saleService.create(requestDto));
+
+        Mockito.verify(this.saleRepository, Mockito.never()).save(Mockito.any());
+        Mockito.verify(this.saleProductRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    @Test
+    public void create_happyPath_setInstallmentAmountSuccessfullyInTheSale (){
+        //Arrange:
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 1, new BigDecimal("0.25"));
+
+        SaleRequestDto requestDto = new SaleRequestDtoBuilder()
+                .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
+                .withInstallments(2)
+                .build();
+        Customer searchedCustomer = new CustomerBuilder().build();
+        Sale mappedSale = new SaleBuilder().withTotalAmount(null).withInstallments(2)
+                .withInstallmentAmount(BigDecimal.ZERO).build();
+        Product searchedProduct = new ProductBuilder().build();
+        SaleProduct mappedSaleProduct = new SaleProduct(null, 1, new BigDecimal("0.25"), null, null);
+        SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
+
+        Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
+        Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
+        Mockito.when(this.productRepository.findById(requestDto.getSaleProductResumeRequestDtos().get(0).getProductId())).thenReturn(Optional.of(searchedProduct));
+        Mockito.when(this.saleProductMapper.toEntity(requestDto.getSaleProductResumeRequestDtos().get(0))).thenReturn(mappedSaleProduct);
+        Mockito.when(this.saleMapper.toResponse(mappedSale, List.of(mappedSaleProduct))).thenReturn(responseDto);
+
+        //Act:
+        this.saleService.create(requestDto);
+
+        //Assert:
+        Assertions.assertEquals(new BigDecimal("0.12"), mappedSale.getInstallmentAmount());
     }
 
     @Test
@@ -428,14 +635,14 @@ class SaleServiceTest {
     @Test
     public void create_quantityOfProductExceedStock_throwsAndDoesNotSave (){
         //Arrange:
-        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 6, new BigDecimal("7.00"));
+        SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 6, new BigDecimal("7.00")); //'quantity' maior que 'stock'
 
         SaleRequestDto requestDto = new SaleRequestDtoBuilder()
                 .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto))
                 .build();
         Customer searchedCustomer = new CustomerBuilder().build();
         Sale mappedSale = new SaleBuilder().build();
-        Product searchedProduct = new ProductBuilder().withStock(5).build(); //estoque a baixo
+        Product searchedProduct = new ProductBuilder().withStock(5).build();
 
         Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
         Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
@@ -449,7 +656,7 @@ class SaleServiceTest {
         Mockito.verify(this.saleRepository, Mockito.never()).save(Mockito.any());
     }
 
-    @Test //OLHAR ESSE AQUI se a quantidade for igual a stock + 1 entao n permitir a venda
+    @Test
     public void create_quantityOfProductEqualsStock_saveSaleSuccessfully (){
         //Arrange:
         SaleProductResumeRequestDto saleProductResumeRequestDto = new SaleProductResumeRequestDto(1L, 5, new BigDecimal("7.00"));
@@ -459,7 +666,7 @@ class SaleServiceTest {
                 .build();
         Customer searchedCustomer = new CustomerBuilder().build();
         Sale mappedSale = new SaleBuilder().build();
-        Product searchedProduct = new ProductBuilder().withStock(5).build();//estoque a baixo
+        Product searchedProduct = new ProductBuilder().withStock(5).build();// 'stock' igual a 'quantity'
         SaleProduct mappedSaleProduct = new SaleProduct(null, 5, new BigDecimal("7.00"), null, null);
         SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
 
@@ -486,7 +693,7 @@ class SaleServiceTest {
                 .build();
         Customer searchedCustomer = new CustomerBuilder().build();
         Sale mappedSale = new SaleBuilder().build();
-        Product searchedProduct = new ProductBuilder().withStock(10).build();//estoque maior que a 'quantity' de produtos
+        Product searchedProduct = new ProductBuilder().withStock(10).build();//'stock' maior que a 'quantity' de produtos
         SaleProduct mappedSaleProduct = new SaleProduct(null, 5, new BigDecimal("7.00"), null, null);
         SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
 
@@ -504,7 +711,42 @@ class SaleServiceTest {
     }
 
     @Test
-    public void create_happyPath_settSaleAndProductInSaleProductSuccessfully (){
+    public void create_stockGreaterThanQuantityOfProducts_itemsSuccessfullyRemovedFromInventory (){
+        //Arrange:
+        SaleProductResumeRequestDto saleProductResumeRequestDto1 = new SaleProductResumeRequestDto(1L, 5, new BigDecimal("7.00"));
+        SaleProductResumeRequestDto saleProductResumeRequestDto2 = new SaleProductResumeRequestDto(2L, 2, new BigDecimal("10.00"));
+
+        SaleRequestDto requestDto = new SaleRequestDtoBuilder()
+                .withSaleProductResumeRequestDtos(List.of(saleProductResumeRequestDto1, saleProductResumeRequestDto2))
+                .build();
+        Customer searchedCustomer = new CustomerBuilder().build();
+        Sale mappedSale = new SaleBuilder().build();
+        Product searchedProduct1 = new ProductBuilder().withStock(10).build(); //'stock' maior que a 'quantity' de produtos
+        Product searchedProduct2 = new ProductBuilder().withStock(8).build(); //'stock' maior que a 'quantity' de produtos
+        SaleProduct mappedSaleProduct1 = new SaleProduct(null, 5, new BigDecimal("7.00"), null, null);
+        SaleProduct mappedSaleProduct2 = new SaleProduct(null, 2, new BigDecimal("10.00"), null, null);
+        SaleResponseDto responseDto = new SaleResponseDtoBuilder().build();
+
+        Mockito.when(this.customerRepository.findById(requestDto.getCustomerId())).thenReturn(Optional.of(searchedCustomer));
+        Mockito.when(this.saleMapper.toEntity(requestDto)).thenReturn(mappedSale);
+        Mockito.when(this.productRepository.findById(requestDto.getSaleProductResumeRequestDtos().get(0).getProductId())).thenReturn(Optional.of(searchedProduct1));
+        Mockito.when(this.productRepository.findById(requestDto.getSaleProductResumeRequestDtos().get(1).getProductId())).thenReturn(Optional.of(searchedProduct2));
+        Mockito.when(this.saleProductMapper.toEntity(requestDto.getSaleProductResumeRequestDtos().get(0))).thenReturn(mappedSaleProduct1);
+        Mockito.when(this.saleProductMapper.toEntity(requestDto.getSaleProductResumeRequestDtos().get(1))).thenReturn(mappedSaleProduct2);
+        Mockito.when(this.saleMapper.toResponse(mappedSale, List.of(mappedSaleProduct1, mappedSaleProduct2))).thenReturn(responseDto);
+
+        //Act:
+        this.saleService.create(requestDto);
+
+        //Assert:
+        Assertions.assertEquals(5, searchedProduct1.getStock());
+        Assertions.assertEquals(6, searchedProduct2.getStock());
+        Mockito.verify(productRepository).save(searchedProduct1);
+        Mockito.verify(productRepository).save(searchedProduct2);
+    }
+
+    @Test
+    public void create_happyPath_setSaleAndProductInSaleProductSuccessfully (){
         //Arrange:
         SaleRequestDto requestDto = new SaleRequestDtoBuilder()
                 .build();
@@ -573,7 +815,9 @@ class SaleServiceTest {
         //Assert:
         Assertions.assertThrows(SaleNotFoundException.class,
                 () -> this.saleService.updateSaleDate(1L, requestDto));
+
         Mockito.verify(this.saleRepository, Mockito.never()).save(Mockito.any());
+        Mockito.verify(this.saleMapper, Mockito.never()).updateSaleDate(Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -597,6 +841,8 @@ class SaleServiceTest {
         Mockito.verify(this.saleRepository).save(searchedSale);
         Assertions.assertSame(responseDto, returned);
     }
+
+
 
 
 //cancelSale:
@@ -628,13 +874,14 @@ class SaleServiceTest {
         Mockito.verify(this.saleRepository, Mockito.never()).save(Mockito.any());
     }
 
-
     @Test
     public void cancelSale_happyPath_updatesProductStockSuccessfully (){
         //Arrange:
-        Product product = new ProductBuilder().withStock(25).build();
-        SaleProduct saleProduct = new SaleProduct(1L, 10, null, null, product);
-        Sale searchedSale = new SaleBuilder().withSaleProducts(List.of(saleProduct)).build();
+        Product product1 = new ProductBuilder().withStock(25).build();
+        Product product2 = new ProductBuilder().withStock(10).build();
+        SaleProduct saleProduct1 = new SaleProduct(1L, 10, null, null, product1);
+        SaleProduct saleProduct2 = new SaleProduct(2L, 5, null, null, product2);
+        Sale searchedSale = new SaleBuilder().withSaleProducts(List.of(saleProduct1, saleProduct2)).build();
 
         Mockito.when(this.saleRepository.findById(1L)).thenReturn(Optional.of(searchedSale));
 
@@ -642,12 +889,13 @@ class SaleServiceTest {
         this.saleService.cancelSale(1L);
 
         //Assert:
-        Mockito.verify(this.productRepository).save(this.productCaptor.capture());
-        Product captured = this.productCaptor.getValue();
-        Assertions.assertEquals(35, captured.getStock());
+        Mockito.verify(this.productRepository, Mockito.times(2)).save(this.productCaptor.capture());
+        List<Product> captured = this.productCaptor.getAllValues();
+        Assertions.assertEquals(35, captured.get(0).getStock());
+        Assertions.assertEquals(15, captured.get(1).getStock());
     }
 
-    @Test //Revisar esse teste
+    @Test
     public void cancelSale_happyPath_updatesSaleStatusSuccessfully (){
         //Arrange:
         Product product = new ProductBuilder().withStock(25).build();
