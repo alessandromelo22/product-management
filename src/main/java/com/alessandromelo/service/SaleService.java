@@ -13,7 +13,10 @@ import com.alessandromelo.enums.SaleStatus;
 import com.alessandromelo.exception.customer.CustomerNotFoundException;
 import com.alessandromelo.exception.product.ProductNotFoundException;
 import com.alessandromelo.exception.product.ProductQuantityExceedsStock;
+import com.alessandromelo.exception.sale.InstallmentNotValidException;
+import com.alessandromelo.exception.sale.SaleAlreadyCanceledException;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
+import com.alessandromelo.exception.saleproduct.QuantityNotValidException;
 import com.alessandromelo.mapper.SaleMapper;
 import com.alessandromelo.mapper.SaleProductMapper;
 import com.alessandromelo.repository.CustomerRepository;
@@ -55,27 +58,39 @@ public class SaleService {
 
 
 
-//Calcular 'totalAmount'
+//Calcular 'totalAmount', pegando o 'unitPrice' e multiplicando pela 'quantity' de cada Product
     private BigDecimal calculatesTheTotalAmount(List<SaleProductResumeRequestDto> saleProductResumeRequestDtos){
 
-        BigDecimal totalAmount = BigDecimal.ZERO;//verificar se essa forma de inicializar ele esta certa
+        BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (SaleProductResumeRequestDto saleProductResumeRequestDto : saleProductResumeRequestDtos) {
-            // se 'unitPrice' nao for informado sera settado com o valor de Product.price
-            if(saleProductResumeRequestDto.getUnitPrice() == null){
-                saleProductResumeRequestDto.setUnitPrice(this.productRepository.findById(saleProductResumeRequestDto.getProductId()).get().getPrice());
+
+            if (saleProductResumeRequestDto.getQuantity() <= 0){
+                throw new QuantityNotValidException();
             }
 
-            totalAmount.add(saleProductResumeRequestDto.getUnitPrice().multiply(BigDecimal.valueOf(saleProductResumeRequestDto.getQuantity())));
+            // se 'unitPrice' for null ou for <= 0 sera settado com o valor de `Product.price`
+            if(saleProductResumeRequestDto.getUnitPrice() == null || saleProductResumeRequestDto.getUnitPrice().compareTo(BigDecimal.ZERO) <= 0){
+
+                Product product = this.productRepository.findById(saleProductResumeRequestDto.getProductId())
+                        .orElseThrow( () -> new ProductNotFoundException(saleProductResumeRequestDto.getProductId()));
+
+                saleProductResumeRequestDto.setUnitPrice(product.getPrice());
+            }
+
+            totalAmount = totalAmount.add(saleProductResumeRequestDto.getUnitPrice().multiply(BigDecimal.valueOf(saleProductResumeRequestDto.getQuantity())));
         }
-        return totalAmount;
+        return totalAmount.setScale(2,RoundingMode.HALF_EVEN);
     }
 
 //Calcula 'installmentAmount' de acordo com a quantidade de 'installments':
     private BigDecimal calculatesTheInstallmentAmount(BigDecimal totalAmount, Integer installments){
+
+        if (installments <= 0){
+            throw new InstallmentNotValidException();
+        }
         return totalAmount.divide(BigDecimal.valueOf(installments), 2, RoundingMode.HALF_EVEN); //"Banker's rounding" (Arredondamento do Banqueiro)
     }
-
 
 //GET
     public List<SaleResponseDto> getAll(){
@@ -106,10 +121,6 @@ public class SaleService {
 
         return sales.stream().map(this.saleMapper::toResponse).toList();
     }
-
-
-    //Concertar os calculos de 'totalAmount' e 'installments'
-    //Usar RoundingMode para ajudar nos arredondamentos
 
 //POST
     @Transactional
@@ -149,9 +160,12 @@ public class SaleService {
                     () -> new ProductNotFoundException(requestDto.getSaleProductResumeRequestDtos().get(finalI).getProductId())
             );
 
-            //Verifica se a 'quantity' do produto na Sale é compativel com o estoque:
+            //Verifica se a 'quantity' do produto na Sale é compativel com o 'stock':
             if (requestDto.getSaleProductResumeRequestDtos().get(i).getQuantity() > product.getStock()){
                 throw new ProductQuantityExceedsStock(product.getName(), product.getStock());
+            } else {
+                product.setStock(product.getStock() - requestDto.getSaleProductResumeRequestDtos().get(i).getQuantity()); //da baixa no 'stock' do Product
+                this.productRepository.save(product);
             }
 
             //SaleProduct:
@@ -189,6 +203,10 @@ public class SaleService {
         Sale sale = this.saleRepository.findById(saleId).orElseThrow(
                 () -> new SaleNotFoundException(saleId)
         );
+
+        if (sale.getStatus() == SaleStatus.CANCELLED){
+            throw new SaleAlreadyCanceledException(saleId);
+        }
 
         for (int i = 0; i< sale.getSaleProducts().size(); i++){
 

@@ -33,7 +33,7 @@ public class ProductService {
 
 //GET
     public List<ProductResponseDto> getAll(){
-        return this.productRepository.findAll().stream().map(this.productMapper::toResponseDto).toList();
+        return this.productRepository.findAll().stream().map(this.productMapper::toResponse).toList();
     }
 
 //GET
@@ -43,7 +43,7 @@ public class ProductService {
                 () -> new ProductNotFoundException(productId)
         );
 
-        return this.productMapper.toResponseDto(product);
+        return this.productMapper.toResponse(product);
     }
 
 //POST
@@ -58,7 +58,7 @@ public class ProductService {
         }
         Product product = this.productMapper.toEntity(requestDto);
 
-        return this.productMapper.toResponseDto(this.productRepository.save(product));
+        return this.productMapper.toResponse(this.productRepository.save(product));
     }
 
 //PUT
@@ -81,7 +81,7 @@ public class ProductService {
         product.setPrice(requestDto.getPrice());
         product.setStock(requestDto.getStock());
 
-        return this.productMapper.toResponseDto(this.productRepository.save(product));
+        return this.productMapper.toResponse(this.productRepository.save(product));
     }
 
 //PATCH:
@@ -98,7 +98,7 @@ public class ProductService {
         }
         product.setStock(product.getStock() + requestDto.getInputQuantity());
 
-        return this.productMapper.toResponseDto(this.productRepository.save(product));
+        return this.productMapper.toResponse(this.productRepository.save(product));
     }
 
 //DELETE

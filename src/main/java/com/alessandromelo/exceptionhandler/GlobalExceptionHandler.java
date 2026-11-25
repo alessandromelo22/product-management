@@ -6,7 +6,10 @@ import com.alessandromelo.exception.customer.PhoneNumberAlreadyExistsException;
 import com.alessandromelo.exception.global.EntityInUseException;
 import com.alessandromelo.exception.product.InvalidStockEntryValueException;
 import com.alessandromelo.exception.product.ProductNotFoundException;
+import com.alessandromelo.exception.sale.InstallmentNotValidException;
+import com.alessandromelo.exception.sale.SaleAlreadyCanceledException;
 import com.alessandromelo.exception.sale.SaleNotFoundException;
+import com.alessandromelo.exception.saleproduct.QuantityNotValidException;
 import com.alessandromelo.exception.user.EmailNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -80,6 +83,31 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(SaleAlreadyCanceledException.class) //400
+    public ResponseEntity<ApiError> handleSaleAlreadyCanceledException (SaleAlreadyCanceledException exception,
+                                                                        HttpServletRequest request){
+
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InstallmentNotValidException.class)//400
+    public ResponseEntity<ApiError> handleInstallmentNotValidException (InstallmentNotValidException exception,
+                                                                        HttpServletRequest request){
+
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
+//SALEPRODUCT:
+    @ExceptionHandler(QuantityNotValidException.class)//400
+    public ResponseEntity<ApiError> handleQuantityNotValidException (QuantityNotValidException exception,
+                                                                        HttpServletRequest request){
+
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 
 
 //GLOBAL:
